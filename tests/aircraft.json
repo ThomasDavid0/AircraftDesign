@@ -1,0 +1,28 @@
+{
+    "version": 0.01,
+    "description": "aircraft definition json file example",
+    "panels": [
+        {
+            "x": 0.2,
+            "z": 0.0,
+            "dihedral": 5.0,
+            "incidence": 0.0,
+            "symm": true,
+            "inbd": {
+                "y": 0.05,
+                "airfoil": "a18-il",
+                "chord": 0.2,
+                "te_thickness": 0.0005,
+                "incidence": 1.0
+            },
+            "otbd": {
+                "y": 0.5,
+                "airfoil": "ag16-il",
+                "chord": 0.15,
+                "te_thickness": 0.0005,
+                "incidence": 0.0
+            }
+        },
+    ],
+    "bodies": []
+}
