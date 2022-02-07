@@ -1,9 +1,9 @@
 from .airfoil import Airfoil
-from geometry import Transformation, Point, Quaternion
+from geometry import Transformation, Point, Quaternion, Euler
 
 
-class Rib:
-    def __init__(self, transform: Transformation, airfoil: Airfoil):
+class Rib(Airfoil):
+    def __init__(self, transform: Transformation, *args, **kwargs):
         """A rib represents a positioned airfoil
 
         Args:
@@ -11,16 +11,15 @@ class Rib:
             airfoil (Airfoil): represents the section points
         """
         self.transform = transform
-        self.airfoil = airfoil
+        super().__init__(*args, **kwargs)
 
     @staticmethod
-    def create(airfoil: Airfoil, x: float, y: float, incidence: float):
+    def create(airfoil_name, panelpos: Point, chord, incidence, te_thickness):
         return Rib(
             Transformation(
-                Point(x,y,0), 
-                Quaternion.zero().rotate(Point(0, -incidence, 0))
+                Point(panelpos.y,0,panelpos.z),
+                Euler(0, incidence, 0)
             ),
-            airfoil
+            airfoil_name,
+            Airfoil.download(airfoil_name).set_chord(chord).set_te_thickness(te_thickness).points
         )
-
-    
