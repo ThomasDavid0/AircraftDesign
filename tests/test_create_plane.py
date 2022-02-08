@@ -19,3 +19,4 @@ def create_doc():
 def test_create_plane(plane):
     doc = create_plane(plane,"/home/tom/projects/f3a_design/test2.FCStd")
     assert isinstance(doc, float)
+
