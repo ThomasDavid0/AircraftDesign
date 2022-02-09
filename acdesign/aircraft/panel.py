@@ -1,4 +1,4 @@
-from geometry import Point, Transformation
+from geometry import Point, Transformation, Euler
 
 from .rib import Rib
 
@@ -13,10 +13,10 @@ class Panel:
         otbd: Rib
     ):
         """A panel represents a constant taper section of wing, tail, fin etc.  
-        left wing is modelled, sym reflects to right wing.
+        right wing is modelled, sym reflects to left wing.
 
         Args:
-            transform (Transformation): from body frame to y axis along length of panel, x axis aft, z down
+            transform (Transformation): from body frame to y axis along length of panel, x axis aft, z up)
             symm (bool): [description]
             inbd (Rib): [description]
             otbd (Rib): [description]
@@ -52,4 +52,22 @@ class Panel:
         return np.arctan2(
             self.le_sweep_distance,
             self.semispan
+        )
+
+    @staticmethod
+    def create(
+        pos: Point, 
+        span :float,
+        symm: bool,
+        dihedral: float, 
+        le_sweep: float,
+        root: Rib,
+        tip: Rib
+    ):
+
+        return Panel(
+            Transformation(pos, Euler(dihedral, np.pi, 0)),
+            True,
+            root,
+            tip.offset(Point(le_sweep, span, 0)),
         )
