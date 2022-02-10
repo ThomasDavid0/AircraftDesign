@@ -5,7 +5,7 @@ from geometry import Point
 
 @pytest.fixture
 def avlfile():
-    return "tests/cold_draft.avl"
+    return "tests/data/cold_draft.avl"
 
 @pytest.fixture
 def avldata(avlfile):

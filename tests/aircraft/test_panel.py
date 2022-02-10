@@ -7,13 +7,14 @@ import numpy as np
 @pytest.fixture
 def _panel():
     return Panel(
+        "testpanel",
         Transformation(
             Point(0.2, 0.1, 0.1),
             Euler(np.radians(-5), 0.0, 0.0)
         ),
         True, 
-        Rib.create("e1200-il", Point.zeros(), .3, 0, 0.0004),
-        Rib.create("e1200-il", Point(0.2, 0.0, 0.5), .3, 0, 0.0004)
+        Rib.create("e1200-il", .3, Point.zeros(), 0, 0.0004),
+        Rib.create("e1200-il", .3, Point(0.2, 0.0, 0.5), 0, 0.0004)
     )
 
 

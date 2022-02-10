@@ -1,0 +1,29 @@
+{
+    "version": 0.01,
+    "name": "ColdDraft",
+    "panels": [
+        {
+            "name": "wingmain",
+            "acpos": {"x":-410,"y": 78.5,"z": 0},
+            "dihedral": 0.0,
+            "incidence": 0.0,
+            "symm": "y",
+            "length": 851.2,
+            "sweep": 298,
+            "inbd": {
+                
+                "airfoil": "rae101-il",
+                "chord": 448,
+                "te_thickness": 4,
+                "incidence": 0.0
+            },
+            "otbd": {
+                "airfoil": "e168-il",
+                "chord": 150,
+                "te_thickness": 4,
+                "incidence": 0.0
+            }
+        }
+    ],
+    "bodies": []
+}

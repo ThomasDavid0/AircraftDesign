@@ -7,7 +7,7 @@ from geometry import Points
 
 @pytest.fixture
 def affile():
-    return "tests/seligdatfile.txt"
+    return "tests/data/seligdatfile.txt"
 
 
 def test_parse_selig(affile):

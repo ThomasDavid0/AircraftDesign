@@ -12,7 +12,12 @@ import numpy as np
 
 @pytest.fixture
 def rib():
-    return Rib.create("n63412-il", Point(0, 200, 0), 200, np.radians(5), 5)
+    return Rib.create(
+        "n63412-il", 200, 
+        Point(0, 200, 0), 
+        np.radians(5), 
+        5
+    )
 
 
 @pytest.fixture
@@ -22,7 +27,7 @@ def doc():
 @pytest.fixture
 def body(doc):
     return doc.addObject('PartDesign::Body','Body')
-    
+
 
 def test_create_rib(body, rib):
     sketch = create_rib(body, rib)

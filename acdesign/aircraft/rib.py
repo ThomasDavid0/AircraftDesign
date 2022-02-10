@@ -2,6 +2,7 @@ from .airfoil import Airfoil
 from geometry import Transformation, Point, Quaternion, Euler
 import numpy as np
 
+
 class Rib(Airfoil):
     def __init__(self, transform: Transformation, *args, **kwargs):
         """A rib represents a positioned airfoil
@@ -14,20 +15,22 @@ class Rib(Airfoil):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def create(airfoil_name, chord, panelpos: Point=Point.zeros(), te_thickness=0, incidence=0):
+    def create(airfoil, chord, panelpos: Point=Point.zeros(), te_thickness=0, incidence=0):
         return Rib(
             Transformation(
                 Point(0, panelpos.y, panelpos.z),
-                Euler(np.pi/2, incidence, 0)
+                Euler(np.pi/2, np.radians(incidence), 0)
             ),
-            airfoil_name,
-            Airfoil.download(airfoil_name).set_chord(chord).set_te_thickness(te_thickness).points
+            airfoil,
+            Airfoil.download(airfoil.split("_")[-1]).set_chord(chord).set_te_thickness(te_thickness).points
         )
+
+    def rename(self, name):
+        return Rib(self.transform,name, self.points)
 
     def offset(self, pos):
         return Rib(
-            self, 
-            Transformation(self.transfrom.point + pos, self.transfrom.Quaternion),
+            Transformation(self.transform.translation + pos, self.transform.rotation),
             self.name, self.points
         )
     

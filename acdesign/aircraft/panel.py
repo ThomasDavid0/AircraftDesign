@@ -7,6 +7,7 @@ import numpy as np
 class Panel:
     def __init__(
         self, 
+        name: str,
         transform: Transformation, 
         symm: bool,
         inbd: Rib, 
@@ -21,6 +22,7 @@ class Panel:
             inbd (Rib): [description]
             otbd (Rib): [description]
         """
+        self.name= name
         self.transform = transform
         self.symm = symm
         self.inbd = inbd
@@ -55,19 +57,16 @@ class Panel:
         )
 
     @staticmethod
-    def create(
-        pos: Point, 
-        span :float,
-        symm: bool,
-        dihedral: float, 
-        le_sweep: float,
-        root: Rib,
-        tip: Rib
-    ):
+    def create(name, acpos, dihedral, incidence, symm, inbd, otbd, sweep, length):
 
         return Panel(
-            Transformation(pos, Euler(dihedral, np.pi, 0)),
-            True,
-            root,
-            tip.offset(Point(le_sweep, span, 0)),
+            name,
+            Transformation(
+                Point(**acpos),
+                Euler(np.radians(dihedral) + np.pi, np.radians(incidence), np.pi)
+            ),
+            symm,
+            Rib.create(**inbd),
+            Rib.create(**otbd).rename(f"{name}_inbd_{otbd['airfoil']}").offset(Point(sweep, length, 0)),
         )
+
