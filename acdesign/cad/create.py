@@ -3,6 +3,7 @@ import freecad
 App=freecad.app
 import Part
 import Surface
+import Sketcher
 import acdesign.cad.geom_to_freecad
 from acdesign.aircraft import Plane, Panel, Rib
 import freecad
@@ -22,23 +23,29 @@ def create_panel(doc, panel: Panel):
     skt1 = create_rib(body, panel.inbd.rename(f"{panel.name}_inbd_{panel.inbd.name}"))
     skt2 = create_rib(body, panel.otbd.rename(f"{panel.name}_otbd_{panel.otbd.name}"))
 
-#    surf = doc.addObject("Surface::Sections","Surface")
+    loft = body.newObject('PartDesign::AdditiveLoft','AdditiveLoft')
+    loft.Profile = skt1
+    loft.Sections = [skt2]
+    #    surf = doc.addObject("Surface::Sections","Surface")
  #   surf.NSections = [(skt1, "Edge1"),(skt1, "Edge1")]
 
-  #  surf.Placement = panel.transform.to_placement()
+    body.Placement = panel.transform.to_placement()
     return body
     
 
 def create_rib(body, rib: Rib):
     sketch = body.newObject('Sketcher::SketchObject',rib.name)
     #sketch.Label = rib.name
-    edge = sketch.addGeometry(
-        Part.BSplineCurve(
+    spline = Part.BSplineCurve(
             rib.points.to_vectors(),
             None,None,False,3,None,False
-        ),
-        False
-    )
+        )
+    splineid = sketch.addGeometry(spline,False)
+    line = Part.LineSegment(spline.StartPoint,spline.EndPoint)
+    lineid = sketch.addGeometry(line)
+
+    sketch.addConstraint(Sketcher.Constraint('Coincident',splineid,1,lineid,1))
+    sketch.addConstraint(Sketcher.Constraint('Coincident',splineid,2,lineid,2))
 
     sketch.Placement = rib.transform.to_placement()
     return sketch
