@@ -67,6 +67,6 @@ class Panel:
             ),
             symm,
             Rib.create(**inbd),
-            Rib.create(**otbd).rename(f"{name}_inbd_{otbd['airfoil']}").offset(Point(sweep, length, 0)),
+            Rib.create(**otbd).offset(Point(sweep, length, 0)),
         )
 

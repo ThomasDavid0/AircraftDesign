@@ -30,6 +30,15 @@ class Airfoil:
         return Airfoil.parse_selig(_file[0])
 
     @property
+    def le_point(self):
+        return self.points[self.points.minloc().x]
+
+    @property
+    def te_point(self):
+        return 0.5 * (self.points[0] + self.points[-1])
+
+
+    @property
     def te_thickness(self):
         return self.points[0].y - self.points[-1].y
 
@@ -52,4 +61,5 @@ class Airfoil:
     def set_chord(self, chord):
         return Airfoil(self.name, self.points * chord / self.chord)
 
-    
+    def top_surface(self) -> Points:
+        pass

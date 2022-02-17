@@ -19,7 +19,7 @@ class Rib(Airfoil):
         return Rib(
             Transformation(
                 Point(0, panelpos.y, panelpos.z),
-                Euler(np.pi/2, np.radians(incidence), 0)
+                Euler(np.pi/2, 0, np.radians(incidence))
             ),
             airfoil,
             Airfoil.download(airfoil.split("_")[-1]).set_chord(chord).set_te_thickness(te_thickness).points
