@@ -2,4 +2,4 @@ numpy
 pandas
 scipy
 geometry
-freecad
+pytest

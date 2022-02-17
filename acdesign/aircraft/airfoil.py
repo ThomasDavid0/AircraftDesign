@@ -2,6 +2,7 @@ import urllib.request
 from urllib.error import HTTPError
 from geometry import Points, Point
 import numpy as np
+from scipy.interpolate import interp1d
 
 
 class Airfoil:
@@ -31,12 +32,11 @@ class Airfoil:
 
     @property
     def le_point(self):
-        return self.points[self.points.minloc().x]
+        return self.points[int(self.points.minloc().x)]
 
     @property
     def te_point(self):
         return 0.5 * (self.points[0] + self.points[-1])
-
 
     @property
     def te_thickness(self):
@@ -61,5 +61,29 @@ class Airfoil:
     def set_chord(self, chord):
         return Airfoil(self.name, self.points * chord / self.chord)
 
+    @property
     def top_surface(self) -> Points:
-        pass
+        return self.points[:self.points.minloc().x + 1]
+    
+    @property
+    def btm_surface(self) -> Points:
+        return self.points[self.points.minloc().x:]
+
+    def top_func(self):
+        return interp1d(self.top_surface.x, self.top_surface.y, "cubic", fill_value="extrapolate")
+
+    def btm_func(self):
+        return interp1d(self.top_surface.x, self.top_surface.y, "cubic", fill_value="extrapolate")
+
+    def mean_camber(self):
+        btms = self.btm_surface
+
+        tops = Points(np.array([btms.x, self.top_func()(btms.x), btms.z]).T)
+
+        return 0.5 * (btms + tops)
+
+
+
+
+
+

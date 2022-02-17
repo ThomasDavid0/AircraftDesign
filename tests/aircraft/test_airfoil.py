@@ -45,3 +45,21 @@ def test_set_chord(foil):
 
 def test_thickness(foil):
     assert foil.thickness == 0.07735
+
+
+def test_le_point(foil):
+    assert foil.le_point.x == min(foil.points.x)
+
+def test_top_btm_surface(foil):
+    tsurf = foil.top_surface()
+    bsurf = foil.btm_surface()
+    assert tsurf[-1] == foil.le_point
+    assert bsurf[0] == foil.le_point
+
+
+def test_mean_camber(foil):
+    meanc = foil.mean_camber()
+    assert meanc[0] == foil.le_point
+    assert meanc[-1] == foil.te_point
+
+    
