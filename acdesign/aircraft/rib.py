@@ -33,4 +33,8 @@ class Rib(Airfoil):
             Transformation(self.transform.translation + pos, self.transform.rotation),
             self.name, self.points
         )
-    
+
+    @property
+    def incidence(self):
+        cline = self.transform.rotate(Point(1,0,0))
+        return np.arctan2(cline.y, cline.x)

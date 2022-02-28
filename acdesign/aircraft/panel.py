@@ -30,7 +30,7 @@ class Panel:
 
     @property
     def semispan(self):
-        return self.otbd.transform.translation.z - self.inbd.transform.translation.z
+        return self.otbd.transform.translation.y - self.inbd.transform.translation.y
 
     @property
     def mean_chord(self): 
@@ -47,7 +47,7 @@ class Panel:
 
     @property
     def le_sweep_distance(self):
-        return self.inbd.transform.translation.x - self.otbd.transform.translation.x
+        return self.otbd.transform.translation.x - self.inbd.transform.translation.x
 
     @property
     def le_sweep_angle(self):
@@ -55,6 +55,11 @@ class Panel:
             self.le_sweep_distance,
             self.semispan
         )
+
+    @property
+    def incidence(self):
+        cline = self.transform.rotate(Point(1,0,0))
+        return np.arctan2(cline.z, cline.x) - np.pi
 
     @staticmethod
     def create(name, acpos, dihedral, incidence, symm, inbd, otbd, sweep, length):
