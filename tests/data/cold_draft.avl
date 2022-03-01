@@ -1,7 +1,7 @@
 !***************************************
 !Cold Draft F3A Plane AVL input dataset
 !***************************************
-Cold Draft
+ColdDraft
 !Mach
  0.0    
 !IYsym   IZsym   Zsym
@@ -21,7 +21,6 @@ YDUPLICATE
 ANGLE
 0.0
 
-!Xle    Yle    Zle     Chord   Ainc
 !Wing Centre
 SECTION
 !Xle    Yle    Zle     Chord   Ainc

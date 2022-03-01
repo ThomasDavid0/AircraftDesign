@@ -1,0 +1,67 @@
+HEADER                                 | (keyword)
+acname                                 | name
+0.0                                    | Mach
+1     0     0.0                        | iYsym  iZsym  Zsym
+4.0   0.4   0.1                        | Sref   Cref   Bref
+0.1   0.0   0.0                        | Xref   Yref   Zref
+0.020                                  | !CDp
+
+SURFACE                                | (keyword)
+MainWing                               | name
+12   1.0  20  -1.5                     | Nchord  Cspace   !Nspan !Sspace
+
+COMPONENT                              | (keyword)
+3                                      | Lcomp
+
+INDEX                                  | (keyword) 
+3                                      | Lcomp
+
+YDUPLICATE                             | (keyword)
+0.0                                    | Ydupl
+
+SCALE                                  |  (keyword)
+1.0  1.0  0.8                          | Xscale  Yscale  Zscale
+
+TRANSLATE                              |  (keyword)
+10.0  0.0  0.5                         | dX  dY  dZ
+
+ANGLE                                  | (keyword)
+2.0                                    | dAinc
+
+NOWAKE                                 |  (keyword)
+
+NOALBE                                 |  (keyword)
+
+NOLOAD                                 |  (keyword)
+
+CDCL                                   |  (keyword)
+-1.0 0.02  0.0 0.001  1.0 0.02         |  CL1 CD1  CL2 CD2  CL3 CD3
+
+SECTION                                |  (keyword)
+0.0 5.0 0.2   0.50  1.50   5 -2.0      | Xle Yle Zle   Chord Ainc   !Nspan !Sspace
+
+NACA      0.0 1.0                      | (keyword)    !X1  !X2
+4300s                                  | section
+
+AIRFOIL   X1  X2                       | (keyword)    !X1  !X2
+1.0   0.0                              | xc_i  yc_i
+ 
+AFILE      X1  X2                      | (keyword)   !X1  !X2
+filename                               | filename
+
+DESIGN                                 | (keyword)
+DName  1.0                             | name  weight
+
+CONTROL                                | (keyword)
+elevator  1.0  0.6   0. 1. 0.   1.0    | name gain  Xhinge  XYZhvec  SgnDup
+
+CLAF                                   |  (keyword)
+CLaf                                   |  scale
+
+BODY                                   | (keyword)
+Fuselage                               | name
+15   1.0                               | Nbody  Bspace
+
+BFILE    X1  X2                        | (keyword)   !X1  !X2
+filename                               | filename
+

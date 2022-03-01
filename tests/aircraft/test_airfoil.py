@@ -51,8 +51,8 @@ def test_le_point(foil):
     assert foil.le_point.x == min(foil.points.x)
 
 def test_top_btm_surface(foil):
-    tsurf = foil.top_surface()
-    bsurf = foil.btm_surface()
+    tsurf = foil.top_surface
+    bsurf = foil.btm_surface
     assert tsurf[-1] == foil.le_point
     assert bsurf[0] == foil.le_point
 

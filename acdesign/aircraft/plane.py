@@ -1,6 +1,7 @@
 from geometry import Point, Transformation
 from typing import List
 from .panel import Panel
+from .body import Body
 
 
 
@@ -19,5 +20,5 @@ class Plane:
         return Plane(
             name,
             [Panel.create(**dat) for dat in panels],
-            []
+            [Body.create(**dat) for dat in bodies],
         )
