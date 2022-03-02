@@ -1,11 +1,11 @@
 from tkinter.messagebox import RETRY
 from geometry import Point
 from typing import List, Tuple, Union, Dict, NamedTuple
-from acdesign.aircraft import Panel, Rib, Plane, Body
+from acdesign.aircraft import Panel, Rib, Plane, Body, Mass
 from collections import namedtuple
 import itertools
 from enum import Enum
-from .avl_keywords import kwdict, kw4dict, KeyWord, AVLParam
+from .keywords import kwdict, kw4dict, KeyWord, AVLParam
 import numpy as np
 
 def get_avl_data(file: str):
@@ -110,6 +110,15 @@ def parse_avl_ac(avltups: List[namedtuple]) -> Plane:
         tups["Header"][0][0].name,
         [p for p in itertools.chain(*[parse_avl_surface(s) for s in tups["Surface"]])],
         [b for b in itertools.chain(*[parse_avl_body(b) for b in tups["Body"]])],
+        [dict(
+            name = "Total", 
+            cg = dict(
+                x=tups["Header"][0][0].Xref,
+                y=tups["Header"][0][0].Yref,
+                z=tups["Header"][0][0].Zref
+            ),
+            mass=4.6
+        )],
         0.01
     )
     plane.refdata = tups["Header"][0][0]

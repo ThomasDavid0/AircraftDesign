@@ -1,7 +1,9 @@
 import pytest
-from acdesign.parsers.avl import *
+from acdesign.avl.parse import *
 from geometry import Point
 from itertools import chain
+from acdesign import Plane
+
 
 @pytest.fixture
 def avlfile():
@@ -66,5 +68,5 @@ def test_parse_avl_ac(avltuples):
 
 
 def test_parse_avl(avlfile):
-    ac = parse_avl(avlfile)
+    ac = Plane.parse_avl(avlfile)
     assert isinstance(ac, Plane)

@@ -14,6 +14,12 @@ class Rib(Airfoil):
         self.transform = transform
         super().__init__(*args, **kwargs)
 
+
+    def __getattr__(self, name):
+        if name in ["x", "y", "z", "rw", "rx", "ry", "rz"]:
+            return getattr(self.transform, name)
+        
+
     @staticmethod
     def create(airfoil, chord, panelpos: Point=Point.zeros(), te_thickness=0, incidence=0):
         return Rib(

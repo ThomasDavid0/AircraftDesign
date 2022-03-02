@@ -1,7 +1,7 @@
 import pytest
 
 
-from acdesign.parsers.avl_keywords import _read_kwordfile, _parse_kwfdata, kwfile, KeyWord, kwdict, get_dtype
+from acdesign.avl.keywords import _read_kwordfile, _parse_kwfdata, kwfile, KeyWord, kwdict, get_dtype
 
 
 def test_read_kwordfile():

@@ -1,12 +1,12 @@
 from tkinter.messagebox import RETRY
 from geometry import Point
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, NamedTuple
 from acdesign.aircraft import Panel, Rib, Plane
 from collections import namedtuple
 import itertools
 from enum import Enum
 
-kwfile = "acdesign/parsers/kwords.txt"
+kwfile = "acdesign/avl/kwords.txt"
 
 
 class AVLParam:
@@ -22,6 +22,15 @@ class AVLParam:
             return self.dtype(data[self.row][self.col])
         except IndexError:
             assert self.optional, f"required parameter {self.name} missing"
+
+    def dump(self, data: NamedTuple) -> str:
+        val = getattr(data, self.name)
+        if self.dtype is float:
+            return f"{val:.3f}"
+        elif self.dtype is int:
+            return f"{val}"
+        elif self.dtype is str:
+            return val
 
 
 def _read_kwordfile(file):
@@ -80,13 +89,30 @@ class KeyWord:
         self.word = word
         self.parms= parms
         self.NTuple = namedtuple(word.title(), [parm.name for parm in self.parms])
-    
-    def parse(self, data:str) -> namedtuple:
+
+    def create(self, *args):
+        return self.NTuple(*[args[i] if i < len(args) else None for i in range(len(self.parms))])
+        
+
+    def parse(self, data:str) -> NamedTuple:
         data = [line.split() for line in data]
         return self.NTuple(**{p.name: p.collect(data) for p in self.parms})
 
+    def dump(self, data: NamedTuple) -> List[str]:
+        
+        out = [[self.word]]
+        for parm in self.parms:
+            if not getattr(data, parm.name) is None:
+                while parm.row + 1 > len(out):
+                    out.append([])
+                while parm.col + 1 > len(out[parm.row]):
+                    out[parm.row].append(None)
 
-
+                out[parm.row][parm.col] = parm.dump(data)
+            else:
+                if not parm.optional:
+                    raise ValueError(f"None given for required parameter {parm.name}")
+        return [" ".join(o) for o in out]
 
 kwlist = [KeyWord(*_parse_kwfdata(kwfd)) for kwfd in _read_kwordfile(kwfile)]
 kwdict = {kw.word: kw for kw in kwlist}

@@ -19,7 +19,7 @@ def _panel():
 
 
 def test_area(_panel):
-    assert _panel.area == 500*300 * 2
+    assert _panel.area == 500.0*300.0 * 2
 
 def test_semispan(_panel):
     assert _panel.semispan == 500

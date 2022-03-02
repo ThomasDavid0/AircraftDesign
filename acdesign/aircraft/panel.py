@@ -28,17 +28,33 @@ class Panel:
         self.inbd = inbd
         self.otbd = otbd
 
+    def __getattr__(self, name):
+        if name in ["x", "y", "z", "rw", "rx", "ry", "rz"]:
+            return getattr(self.transform, name)
+
+    @property
+    def root(self):
+        return self.inbd
+
+    @property
+    def tip(self):
+        return self.otbd
+
+    @property
+    def ymax(self):
+        return self.otbd.y + self.y
+
     @property
     def semispan(self):
-        return self.otbd.transform.translation.y - self.inbd.transform.translation.y
+        return self.otbd.y - self.inbd.y
 
     @property
     def mean_chord(self): 
-        return self.inbd.chord + self.otbd.chord
+        return (self.inbd.chord + self.otbd.chord) / 2
 
     @property
     def area(self):
-        _area =  0.5 * self.mean_chord * self.semispan
+        _area =  self.mean_chord * self.semispan
         return 2 * _area if self.symm else _area
             
     @property
@@ -47,7 +63,7 @@ class Panel:
 
     @property
     def le_sweep_distance(self):
-        return self.otbd.transform.translation.x - self.inbd.transform.translation.x
+        return self.otbd.x - self.inbd.x
 
     @property
     def le_sweep_angle(self):
