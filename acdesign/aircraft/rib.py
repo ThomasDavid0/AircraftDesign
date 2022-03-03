@@ -24,7 +24,7 @@ class Rib(Airfoil):
     def create(airfoil, chord, panelpos: Point=Point.zeros(), te_thickness=0, incidence=0):
         return Rib(
             Transformation(
-                Point(0, panelpos.y, panelpos.z),
+                panelpos,
                 Euler(np.pi/2, 0, np.radians(incidence))
             ),
             airfoil,

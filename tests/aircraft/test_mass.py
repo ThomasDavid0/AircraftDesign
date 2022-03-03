@@ -12,5 +12,6 @@ def test_combine():
 
     mass = Mass.combine(masses)
 
-    assert mass.mass == 30
-    np.testing.assert_array_almost_equal(mass.cg.to_list(), Point(3,3,3))
+    assert mass.mass == 15
+    assert mass.cg == Point(3,3,3)
+    

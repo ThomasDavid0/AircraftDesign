@@ -1,4 +1,4 @@
-from geometry import Point, Transformation
+from geometry import Point, Transformation, Points
 import numpy as np
 from typing import List, Dict
 
@@ -14,7 +14,11 @@ class Mass:
     @staticmethod
     def combine(masses: list):
         total = sum(m.mass for m in masses)
-        cg = sum([m.cg * m.mass for m in masses]) / total
+        weighted_masses = [m.cg * m.mass for m in masses]
+        tmass = Point.zeros()
+        for m in weighted_masses:
+            tmass += m
+        cg = tmass / total
         return Mass("Total",cg,total)
 
     @staticmethod
