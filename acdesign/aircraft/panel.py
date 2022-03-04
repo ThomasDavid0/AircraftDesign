@@ -74,8 +74,13 @@ class Panel:
 
     @property
     def incidence(self):
-        cline = self.transform.rotate(Point(1,0,0))
+        cline = self.transform.rotate(Point.X())
         return np.arctan2(cline.z, cline.x) - np.pi
+
+    @property
+    def dihedral(self):
+        cline = self.transform.rotate(Point.Y())
+        return -np.arctan2(cline.z, cline.y)
 
     @staticmethod
     def create(name, acpos, dihedral, incidence, symm, inbd, otbd, sweep, length):
