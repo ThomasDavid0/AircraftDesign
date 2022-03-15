@@ -3,6 +3,7 @@ from typing import List
 from .panel import Panel
 from .body import Body
 from .mass import Mass
+import numpy as np
 
 
 class Plane:

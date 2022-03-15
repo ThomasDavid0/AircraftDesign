@@ -19,4 +19,6 @@ setup(
    author='Thomas David',
    author_email='thomasdavid0@gmail.com',
    packages=['acdesign'],
+   include_package_data = True,
+   package_data = {'': ['data/*']},
 )
