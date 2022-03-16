@@ -5,64 +5,11 @@ import pandas as pd
 
 from acdesign.atmosphere import Atmosphere
 from scipy.optimize import minimize
+from acdesign.performance.aero import AeroModel
+from acdesign.performance.motor import Propulsion
+from acdesign.performance.operating_point import OperatingPoint
+from acdesign.performance.mass_estimation import estimate_mass
 
-class AeroModel:
-    def __init__(self, b, S, MAC, CD0, CLmax):
-        self.b = b
-        self.S = S
-        self.MAC = MAC
-        self.CD0 = CD0
-        self.CLmax = CLmax
-
-    @property
-    def AR(self):
-        return self.b / self.MAC
-
-    @property
-    def k(self):
-        return 1 / (np.pi * self.AR)
-
-
-class Propulsion:
-    def __init__(self, capacity, v0, eta, n):
-        self.capacity = capacity
-        self.eta = eta
-        self.v0 = v0
-        self.n = n
-
-    @staticmethod
-    def lipo(cells, Ah):
-        return Propulsion(0.85 * Ah * 60 * 60, cells*4.0, 0.3, 1.3)
-
-    def endurance(self, preq):
-        return ((self.eta * self.v0 * self.capacity / preq ) ** self.n ) * 3600 ** (1 - self.n)
-
-    @property
-    def Ah(self):
-        return self.capacity / (60*60*0.85)
-
-    @property
-    def mass(self):
-        return self.Ah * self.v0 * 0.0049 
-
-    @property
-    def lipo_cells(self):
-        return self.v0 / 4.0
-
-
-class OperatingPoint:
-    def __init__(self, atm: Atmosphere, V: float):
-        self.atm = atm
-        self.V = V
-
-    @property
-    def Q(self):
-        return 0.5 * self.atm.rho * self.V**2
-
-
-def estimate_mass(aero: AeroModel, batt: Propulsion):
-    #      constant + kg/m + kg/Wh
-    return 6 + 0.5 * aero.b**2 + aero.AR / 10 + batt.mass
 
 class Performance:
     def __init__(self, op: OperatingPoint, aero: AeroModel, mot: Propulsion, mass: float, wind:float):
@@ -105,9 +52,9 @@ class Performance:
         return np.sqrt(2*9.81*self.mass/(self.op.atm.rho * self.aero.S * self.aero.CLmax))
    
     @staticmethod
-    def build(atm, V, b, S, MAC, CD0, CLmax, cells, capacity, wind):
+    def build(atm, V, b, MAC, CD0, CLmax, cells, capacity, wind):
         op = OperatingPoint(atm, V)
-        aero = AeroModel(b, S, MAC, CD0, CLmax)
+        aero = AeroModel(b, b*MAC, MAC, CD0, CLmax)
         mot = Propulsion.lipo(cells, capacity)
         return Performance(op,aero,mot,estimate_mass(aero, mot), wind)
 
@@ -151,42 +98,94 @@ class Performance:
             c1=self.c1,
             c2=self.c2,
             c3=self.c3,
-            c4=self.c4
+            c4=self.c4,
+            c5=self.c5,
         )
     
     @property
     def c1(self):
-        return 1000000 / self.range
+        return 2000000 / self.range
     @property
     def c2(self):
-        return 1000 if self.stall else 0 
+        safety=2
+        return 5000 * (self.stall_speed-self.op.V)**2 if (self.stall_speed + safety) > self.op.V else 0
 
     @property
     def c3(self):
-        return 1000 if self.stall_speed > 15 else 0
-    
+        lim=15
+        return 5000 * (self.stall_speed-lim)**2 if self.stall_speed > lim else 0
+
     @property
     def c4(self):
         return 100000 / self.endurance
 
+    @property
+    def c5(self):
+        lim=16
+        return 5000 * (self.mass - lim)**2 if self.mass > lim else 0
 
 if __name__ == '__main__':
 
 
     def cost(perf: Performance):
-        return perf.c1 + perf.c2 + perf.c3 + perf.c4
+        return perf.c1 + perf.c2 + perf.c3 + perf.c4 + perf.c5
 
     perfs = []
     for wind in np.linspace(0.0, 20.0, 10):
         res = Performance.optimize(
             Atmosphere.alt(3000),
-            dict(b=4.0, S=0.8, MAC=0.3, V=25.0),
-            dict(CD0=0.001, CLmax=1.5, cells=6, capacity=68.0, wind=wind),
+            dict(b=4.0, MAC=0.3, V=25.0),
+            dict(CD0=0.01, CLmax=1.5, cells=6, capacity=51.0, wind=wind),
             cost=cost,
-            bounds=[(2.0, 5.0), (0.3, 2.0), (0.2, 0.5), (5.0, 50.0)],
+            bounds=[(2.0, 5.0), (0.2, 0.5), (5.0, 50.0)],
             method="nelder-mead"
         )
         perfs.append(res.perf)
 
     df = pd.DataFrame([p.dump() for p in perfs])
+
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
+    fig = make_subplots(
+        4,2,
+        shared_xaxes=True,
+        horizontal_spacing=0.05, 
+        vertical_spacing=0.05,
+        subplot_titles=(
+            "AR", 
+            "Span (m)", 
+            "Wing Area (m**2)",
+            "MAC (m)",
+            "Mass (kg)", 
+            "Airspeed (m/s)",
+            "Range (km)",
+            "Endurance (hr)"
+        )
+    ).update_layout(margin=dict(l=20, r=20, t=40, b=40))
+
+    def atrace(x,y, r, c):
+        fig.add_trace(go.Scatter(
+            x=x, 
+            y=y, 
+            showlegend=False,
+            line=dict(color="black"),
+            marker=dict(color="black"), 
+        ), row=r, col=c)
+
+    atrace(df.wind, df.AR, 1, 1)
+    atrace(df.wind, df.b, 1, 2)
+    atrace(df.wind, df.S, 2, 1)
+    atrace(df.wind, df.MAC, 2, 2)
+    atrace(df.wind, df.mass, 3, 1)    
+    atrace(df.wind, df.V, 3, 2)
+    atrace(df.wind, df.range, 4, 1)    
+    atrace(df.wind, df.endurance, 4, 2)
+    
+    fig.update_layout({
+        "xaxis7":dict(title="Headwind Velocity (m/s)"), 
+        "xaxis8":dict(title="Headwind Velocity (m/s)")
+        })
+
+    fig.show()
     pass

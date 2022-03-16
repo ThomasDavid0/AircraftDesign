@@ -1,5 +1,5 @@
 from pytest import fixture, approx
-from acdesign.performance.basic import AeroModel, OperatingPoint, Propulsion, Performance
+from acdesign.performance.performance import AeroModel, OperatingPoint, Propulsion, Performance
 from acdesign.atmosphere import Atmosphere
 
 
