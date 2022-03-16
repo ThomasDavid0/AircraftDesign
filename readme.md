@@ -3,11 +3,10 @@
 
 # Aircraft Design Tools
 
-A standard aircraft defintion python module. 
+A simple, standard aircraft defintion python module. 
 
-output a parametric base model in freecad
+some simple performance estimation and optimisation tools
 
-also interface with some vortex lattice solver (avl or xflr5)
-
+WIP interface with AVL
 
 
