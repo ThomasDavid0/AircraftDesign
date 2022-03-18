@@ -124,8 +124,9 @@ class Performance:
         lim=16
         return 5000 * (self.mass - lim)**2 if self.mass > lim else 0
 
-if __name__ == '__main__':
 
+
+if __name__ == '__main__':
 
     def cost(perf: Performance):
         return perf.c1 + perf.c2 + perf.c3 + perf.c4 + perf.c5
@@ -181,7 +182,7 @@ if __name__ == '__main__':
     atrace(df.wind, df.V, 3, 2)
     atrace(df.wind, df.range, 4, 1)    
     atrace(df.wind, df.endurance, 4, 2)
-    
+    print(df)    
     fig.update_layout({
         "xaxis7":dict(title="Headwind Velocity (m/s)"), 
         "xaxis8":dict(title="Headwind Velocity (m/s)")

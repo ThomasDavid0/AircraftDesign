@@ -1,12 +1,12 @@
 import urllib.request
 from urllib.error import HTTPError
-from geometry import Points, Point
+from geometry import Point
 import numpy as np
 from scipy.interpolate import interp1d
 
 
 class Airfoil:
-    def __init__(self, name, points: Points):
+    def __init__(self, name, points: Point):
         self.name = name
         self.points = points
 
@@ -20,7 +20,7 @@ class Airfoil:
 
         return Airfoil(
             lines[0].strip(), 
-            Points(
+            Point(
                 np.append(data, np.zeros((len(data), 1)), axis=1) 
             )
         )
@@ -55,18 +55,22 @@ class Airfoil:
 
         xunit = self.points.x / self.chord
 
-        te_diff = Points.Y(0.5 * (thick - self.te_thickness) * xunit * surfaces)
+        te_diff = Point.Y(
+            0.5 * (thick - self.te_thickness),
+            len(self.points)
+        ) * xunit * surfaces
+
         return Airfoil(self.name, self.points + te_diff)
 
     def set_chord(self, chord):
         return Airfoil(self.name, self.points * chord / self.chord)
 
     @property
-    def top_surface(self) -> Points:
+    def top_surface(self) -> Point:
         return self.points[:self.points.minloc().x + 1]
     
     @property
-    def btm_surface(self) -> Points:
+    def btm_surface(self) -> Point:
         return self.points[self.points.minloc().x:]
 
     def top_func(self):
@@ -78,7 +82,7 @@ class Airfoil:
     def mean_camber(self):
         btms = self.btm_surface
 
-        tops = Points(np.array([btms.x, self.top_func()(btms.x), btms.z]).T)
+        tops = Point(btms.x, self.top_func()(btms.x), btms.z)
 
         return 0.5 * (btms + tops)
 

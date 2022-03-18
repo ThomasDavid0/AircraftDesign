@@ -16,14 +16,14 @@ class Rib(Airfoil):
 
 
     def __getattr__(self, name):
-        if name in ["x", "y", "z", "rw", "rx", "ry", "rz"]:
+        if name in self.transform.cols:
             return getattr(self.transform, name)
         
 
     @staticmethod
     def create(airfoil, chord, panelpos: Point=Point.zeros(), te_thickness=0, incidence=0):
         return Rib(
-            Transformation(
+            Transformation.build(
                 panelpos,
                 Euler(np.pi/2, 0, np.radians(incidence))
             ),
@@ -36,7 +36,7 @@ class Rib(Airfoil):
 
     def offset(self, pos):
         return Rib(
-            Transformation(self.transform.translation + pos, self.transform.rotation),
+            Transformation.build(self.transform.translation + pos, self.transform.rotation),
             self.name, self.points
         )
 

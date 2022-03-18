@@ -5,13 +5,15 @@ from acdesign.atmosphere import Atmosphere
 
 
 def test_k():
-    assert AeroModel(1.7, 0.525, 0.2, 8.5, 0.02, 1.5).k == approx(0.037448, 0.0001)
+    assert AeroModel(1.7, 1.7*0.2, 0.2, 0.02, 1.5).k == approx(0.0452482219)
 
-def test_performance(buddi):
+def test_performance():
     p = Performance(
         OperatingPoint(Atmosphere.alt(0), 26),
-        AeroModel(1.7, 0.525, 0.2, 8.5, 0.02, 1.5),
-        Propulsion.lipo(6, 12.75)
+        AeroModel(1.7, 0.525, 0.2, 0.02, 1.5),
+        Propulsion.lipo(6, 12.75),
+        5.0,
+        0.0
     )
     
     assert p.CL ==  approx(0.383598, 1e-4)

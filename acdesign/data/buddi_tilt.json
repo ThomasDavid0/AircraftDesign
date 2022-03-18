@@ -1,0 +1,105 @@
+{
+    "version": 0.01,
+    "name": "BUDDI_tilt",
+    "panels": [
+        {
+            "name": "wing_centre",
+            "acpos": {"x":-300,"y": 0,"z": 0},
+            "dihedral": 0.0,
+            "incidence": 0.0,
+            "symm": "y",
+            "length": 500,
+            "sweep": 0,
+            "inbd": {
+                "airfoil": "e174-il",
+                "chord": 300,
+                "te_thickness": 1.5,
+                "incidence": 0.0
+            },
+            "otbd": {
+                "airfoil": "e174-il",
+                "chord": 300,
+                "te_thickness": 1.5,
+                "incidence": 0.0
+            }
+        },
+        {
+            "name": "wing_outer",
+            "acpos": {"x":-300,"y": 540,"z": 0},
+            "dihedral": 0.0,
+            "incidence": 0.0,
+            "symm": "y",
+            "length": 1600,
+            "sweep": 100,
+            "inbd": {
+                "airfoil": "e174-il",
+                "chord": 300,
+                "te_thickness": 1.5,
+                "incidence": 0.0
+            },
+            "otbd": {
+                "airfoil": "e174-il",
+                "chord": 150,
+                "te_thickness": 1.5,
+                "incidence": 0.0
+            }
+        },
+        {
+            "name": "htail",
+            "acpos": {"x":-1200,"y": 0,"z": 0},
+            "dihedral": 0.0,
+            "incidence": 0.0,
+            "symm": "y",
+            "length": 450,
+            "sweep": 0,
+            "inbd": {
+                "airfoil": "e230-il",
+                "chord": 180,
+                "te_thickness": 1,
+                "incidence": 0.0
+            },
+            "otbd": {
+                "airfoil": "e230-il",
+                "chord": 150,
+                "te_thickness": 1,
+                "incidence": 0.0
+            }
+        },
+        {
+            "name": "fin",
+            "acpos": {"x":-1400,"y": 0,"z": 0},
+            "dihedral": 90.0,
+            "incidence": 0.0,
+            "symm": "z",
+            "length": 410,
+            "sweep": 100,
+            "inbd": {
+                "airfoil": "e230-il",
+                "chord": 250,
+                "te_thickness": 1.5,
+                "incidence": 0.0
+            },
+            "otbd": {
+                "airfoil": "e230-il",
+                "chord": 150,
+                "te_thickness": 1.5,
+                "incidence": 0.0
+            }
+        }
+
+    ],
+    "bodies": [],
+    "masses": [
+        {
+            "name": "total",
+            "cg": {"x":-511,"y": 0,"z": 0},
+            "mass": 4.6,
+            "inertia": [
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]
+            ]
+
+        }
+    ]
+}

@@ -1,7 +1,7 @@
 from geometry import Point, Transformation, Euler
-
+from typing import List
 from .rib import Rib
-
+from typing import List
 import numpy as np
 
 class Panel:
@@ -87,7 +87,7 @@ class Panel:
 
         return Panel(
             name,
-            Transformation(
+            Transformation.build(
                 Point(**acpos),
                 Euler(np.radians(dihedral) + np.pi, np.radians(incidence), np.pi)
             ),
@@ -96,3 +96,10 @@ class Panel:
             Rib.create(**otbd).offset(Point(sweep, length, 0)),
         )
 
+
+
+
+
+class Wing:
+    def __init__(self, panels: List[Panel]):
+        self.panes = panels

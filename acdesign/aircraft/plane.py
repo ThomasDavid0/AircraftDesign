@@ -6,6 +6,8 @@ from .mass import Mass
 import numpy as np
 
 
+
+
 class Plane:
     """An aircraft. Origin on nose, x axis forward, y axis to right, z axis down.
     """
@@ -26,9 +28,11 @@ class Plane:
             [Mass.create(**mass) for mass in masses]
         )
 
+
+
     @property
     def sref(self) -> float:
-        return max([p.area for p in self.panels])
+        return sum([p.area for p in self.panels if "wing" in p.name])
 
     @property
     def cref(self) -> float:

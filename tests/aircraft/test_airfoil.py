@@ -2,7 +2,7 @@
 from acdesign.aircraft.airfoil import Airfoil
 import numpy as np
 import pytest
-from geometry import Points
+from geometry import Point
 
 
 @pytest.fixture
@@ -13,13 +13,13 @@ def affile():
 def test_parse_selig(affile):
     af = Airfoil.parse_selig(affile)
 
-    assert isinstance(af.points, Points)
+    assert isinstance(af.points, Point)
 
 
 def test_download():
     af = Airfoil.download("b29root-il")
-    assert isinstance(af.points, Points)
-    assert af.points.count == 39
+    assert isinstance(af.points, Point)
+    assert len(af.points) == 39
 
 
 @pytest.fixture

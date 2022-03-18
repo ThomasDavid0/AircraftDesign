@@ -8,7 +8,7 @@ import numpy as np
 def _panel():
     return Panel(
         "testpanel",
-        Transformation(
+        Transformation.build(
             Point(200, 100, 100),
             Euler(np.radians(-5), 0.0, 0.0)
         ),
