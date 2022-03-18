@@ -44,3 +44,10 @@ class Rib(Airfoil):
     def incidence(self):
         cline = self.transform.rotate(Point(1,0,0))
         return np.arctan2(cline.y, cline.x)
+
+    def scale(self, fac: float):
+        return Rib(
+            Transformation(self.transform.translation*2, self.transform.rotation),
+            self.name,
+            self.points * fac
+        )

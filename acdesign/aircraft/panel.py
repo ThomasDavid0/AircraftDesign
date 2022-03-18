@@ -4,6 +4,37 @@ from .rib import Rib
 from typing import List
 import numpy as np
 
+
+
+class PanelProps:
+    def __init__(self, p):
+        self.ymax = p.otbd.y + p.y
+        self.semispan = p.otbd.y - p.inbd.y
+        self.mean_chord = (p.inbd.chord + p.otbd.chord) / 2
+        self.area =  self.mean_chord * self.semispan           
+        self.taper_ratio = p.otbd.chord / p.inbd.chord
+        self.le_sweep_distance= p.otbd.x - p.inbd.x
+        self.le_sweep_angle = np.arctan2(
+            self.le_sweep_distance,
+            self.semispan
+        )
+
+        cline = p.transform.rotate(Point.X())
+        self.incidence = np.arctan2(cline.z, cline.x) - np.pi
+
+        cline = p.transform.rotate(Point.Y())
+        self.dihedral = -np.arctan2(cline.z, cline.y)
+
+    
+        t = self.taper_ratio
+        cr = p.inbd.chord
+        #https://www.fzt.haw-hamburg.de/pers/Scholz/HOOU/AircraftDesign_7_WingDesign.pdf
+        self.MAC = (2/3)*cr*(1+t+t**2)/(1+t+t**2)
+        yMAC = (1/3) * (1 + 2*t) / (1+t)
+    
+        self.pMAC = Point(yMAC * self.le_sweep_distance / self.semispan , yMAC, 0) 
+
+
 class Panel:
     def __init__(
         self, 
@@ -28,9 +59,24 @@ class Panel:
         self.inbd = inbd
         self.otbd = otbd
 
+        self.props = PanelProps(self)
+
+
     def __getattr__(self, name):
-        if name in ["x", "y", "z", "rw", "rx", "ry", "rz"]:
+        if name in self.transform.cols:
             return getattr(self.transform, name)
+        elif name in self.props.__dict__:
+            return getattr(self.props, name)
+        raise AttributeError(f"Attribute {name} not found")
+        
+    def scale(self, fac: float):
+        return Panel(
+            self.name, 
+            Transformation(self.transform.translation * 2, self.transform.rotation),
+            self.symm,
+            self.inbd.scale(fac),
+            self.otbd.scale(fac)
+        )
 
     @property
     def root(self):
@@ -39,48 +85,6 @@ class Panel:
     @property
     def tip(self):
         return self.otbd
-
-    @property
-    def ymax(self):
-        return self.otbd.y + self.y
-
-    @property
-    def semispan(self):
-        return self.otbd.y - self.inbd.y
-
-    @property
-    def mean_chord(self): 
-        return (self.inbd.chord + self.otbd.chord) / 2
-
-    @property
-    def area(self):
-        _area =  self.mean_chord * self.semispan
-        return 2 * _area if self.symm else _area
-            
-    @property
-    def taper_ratio(self):
-        return self.otbd.chord / self.inbd.chord
-
-    @property
-    def le_sweep_distance(self):
-        return self.otbd.x - self.inbd.x
-
-    @property
-    def le_sweep_angle(self):
-        return np.arctan2(
-            self.le_sweep_distance,
-            self.semispan
-        )
-
-    @property
-    def incidence(self):
-        cline = self.transform.rotate(Point.X())
-        return np.arctan2(cline.z, cline.x) - np.pi
-
-    @property
-    def dihedral(self):
-        cline = self.transform.rotate(Point.Y())
-        return -np.arctan2(cline.z, cline.y)
 
     @staticmethod
     def create(name, acpos, dihedral, incidence, symm, inbd, otbd, sweep, length):
@@ -96,10 +100,3 @@ class Panel:
             Rib.create(**otbd).offset(Point(sweep, length, 0)),
         )
 
-
-
-
-
-class Wing:
-    def __init__(self, panels: List[Panel]):
-        self.panes = panels
