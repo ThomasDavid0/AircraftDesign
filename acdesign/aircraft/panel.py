@@ -1,7 +1,7 @@
 from geometry import Point, Transformation, Euler, PX, PY
 from typing import List
 from .rib import Rib
-from typing import List
+from typing import Dict, List
 import numpy as np
 
 
@@ -35,13 +35,28 @@ class PanelProps:
         self.pMAC = Point(yMAC * self.le_sweep_distance / self.semispan , yMAC, 0) 
 
 
+
+class LECurve:
+    def __init__(self, name, func):
+        self.name = name
+        self.func = func
+
+    def __call__(self, y_over_b, sweep):
+        return self.func(y_over_b, sweep)
+
+
+linear = LECurve("line", lambda y_over_b, sweep: sweep * y_over_b)
+
+
 class Panel:
     def __init__(
         self, 
         name: str,
         transform: Transformation, 
         symm: bool,
-        ribs: List[Rib]
+        ribs: Dict[float, Rib],
+        le_func: callable = linear,
+        te_func: callable = linear
     ):
         """A panel represents a constant taper section of wing, tail, fin etc.  
         right wing is modelled, sym reflects to left wing.
@@ -57,12 +72,14 @@ class Panel:
         self.symm = symm
         self.ribs = ribs
         self.props = PanelProps(self)
+        self.le_curve = lambda y_over_b: le_func(y_over_b, self.props.le_sweep_distance)
+        self.te_curve = lambda y_over_b: te_func(y_over_b, self.props.le_sweep_distance - self.root.chord - self.tip.chord)
 
     def __getattr__(self, name):
         if name in ["inbd", "root"]:
             return self.ribs[0]
         elif name in ["otbd", "tip"]:
-            return self.ribs[-1]
+            return self.ribs[1]
         if name in self.transform.cols:
             return getattr(self.transform, name)
         elif name in self.props.__dict__:
@@ -87,9 +104,9 @@ class Panel:
                 Euler(np.radians(dihedral) + np.pi, np.radians(incidence), np.pi)
             ),
             symm,
-            [
-                Rib.create(**inbd),
-                Rib.create(**otbd).offset(Point(sweep, length, 0)),
-            ]
+            {
+                0.0: Rib.create(**inbd),
+                1.0: Rib.create(**otbd).offset(Point(sweep, length, 0)),
+            }
         )
 
