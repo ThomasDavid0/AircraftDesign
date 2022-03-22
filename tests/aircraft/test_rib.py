@@ -1,10 +1,10 @@
-import pytest
+from pytest import fixture, approx
 from geometry import Point
 import numpy as np
 from acdesign.aircraft.rib import Rib
 from acdesign.aircraft.panel import Panel
 
-rib = {
+_rib = {
     "airfoil": "a18-il",
     "chord": 0.2,
     "te_thickness": 0.0005,
@@ -13,10 +13,15 @@ rib = {
 
 
 
-def test_create_rib():
-    _rib = Rib.create(**rib)
+@fixture
+def rib():
+    return Rib.create(**_rib)
+
+def test_create_rib(rib):
+    
 
     #assert _rib.transform.translation == Point(0,0.0, 0.05)
-    assert _rib.chord == rib["chord"]
-    assert _rib.te_thickness == rib["te_thickness"]
-    assert _rib.transform.rotation.to_euler().z == np.radians(rib["incidence"])
+    assert rib.chord == _rib["chord"]
+    assert rib.te_thickness == _rib["te_thickness"]
+    assert rib.transform.rotation.to_euler().z == np.radians(_rib["incidence"])
+

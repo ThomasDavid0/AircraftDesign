@@ -85,11 +85,11 @@ def parse_avl_surface(avltups: List[namedtuple]) -> List[dict]:
         panels.append(dict(
             name=refdat.name,
             acpos=rp.to_dict(),
-            dihedral=np.arctan2(dp.z, dp.y),
+            dihedral=np.arctan2(dp.z[0], dp.y[0]),
             incidence=0,
             symm=len(tups["Yduplicate"]) > 0,
-            length=dp.y,
-            sweep=dp.x,
+            length=dp.y[0],
+            sweep=dp.x[0],
             inbd = parse_avl_section(rl),
             otbd = parse_avl_section(tl)
         ))

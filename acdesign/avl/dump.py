@@ -6,11 +6,12 @@ from typing import NamedTuple, List
 from geometry import Point
 import numpy as np
 
+
 def rib_dump_avl(rib: Rib) -> List[NamedTuple]:
     return kwdict["SECTION"].dump(kwdict["SECTION"].create(
-            rib.transform.translation.x,
-            rib.transform.translation.y,
-            rib.transform.translation.z, 
+            rib.transform.translation.x[0],
+            rib.transform.translation.y[0],
+            rib.transform.translation.z[0], 
             rib.chord,
             np.degrees(rib.incidence)
         )) # + consider adding airfoil stuff here

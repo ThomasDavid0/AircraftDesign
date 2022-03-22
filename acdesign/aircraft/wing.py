@@ -16,6 +16,7 @@ class WingProps:
         xMAC = np.sum([(p.pMAC.x + p.x) * p.area for p in w.panels]) / self.S
         self.pMAC = Point(xMAC, yMAC, 0)
 
+
 class Wing:
     def __init__(self, panels: List[Panel]):
         self.panels = panels
@@ -37,13 +38,15 @@ class Wing:
                     Euler(np.pi, 0, np.pi)
                 ), 
                 True, 
-                r1.offset(-r1.transform.p),
-                r2.offset(-r1.transform.p)
+                [r1.offset(-r1.transform.p),
+                r2.offset(-r1.transform.p)]
             ))
         return Wing(panels)
 
     def scale(self, fac: float):
         return Wing([p.scale(fac) for p in self.panels])
+
+
 
 
     # extend to centre

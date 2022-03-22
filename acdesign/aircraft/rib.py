@@ -1,5 +1,5 @@
 from .airfoil import Airfoil
-from geometry import Transformation, Point, Quaternion, Euler
+from geometry import Transformation, Point, Quaternion, Euler, P0
 import numpy as np
 
 
@@ -21,14 +21,16 @@ class Rib(Airfoil):
         
 
     @staticmethod
-    def create(airfoil, chord, panelpos: Point=Point.zeros(), te_thickness=0, incidence=0):
+    def create(airfoil, chord, panelpos: Point=P0(), te_thickness=0, incidence=0):
         return Rib(
             Transformation.build(
                 panelpos,
                 Euler(np.pi/2, 0, np.radians(incidence))
             ),
             airfoil,
-            Airfoil.download(airfoil.split("_")[-1]).set_chord(chord).set_te_thickness(te_thickness).points
+            Airfoil.download(airfoil.split("_")[-1])
+            .set_chord(chord)
+            .set_te_thickness(te_thickness).points
         )
 
     def rename(self, name):
@@ -43,7 +45,7 @@ class Rib(Airfoil):
     @property
     def incidence(self):
         cline = self.transform.rotate(Point(1,0,0))
-        return np.arctan2(cline.y, cline.x)
+        return np.arctan2(cline.y[0], cline.x[0])
 
     def scale(self, fac: float):
         return Rib(
