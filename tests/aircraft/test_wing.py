@@ -3,7 +3,7 @@ from acdesign.aircraft.wing import Wing
 from geometry import Point
 from .conftest import _panel
 import numpy as np
-from pytest import approx
+from pytest import approx, fixture
 
 ribs = [
     Rib.create("e174-il", 200, Point(0,   0,   0), 1),
@@ -22,10 +22,10 @@ def test_from_ribs():
 
 
 def test_S(_panel):
-    assert Wing([_panel]).S == 500 * 300
+    assert Wing([_panel]).S == 500 * 300 * 2
 
 def test_b(_panel):
-    assert Wing([_panel]).b == 600
+    assert Wing([_panel]).b == 600 * 2
 
 def test_scale():
     wing = Wing.from_ribs(ribs)
@@ -41,8 +41,36 @@ def test_mean_chord():
 # TODO need an independent check of these
 def test_MAC():
     wing = Wing.from_ribs(ribs)
-    assert wing.MAC == approx(118.177920686)
+    assert wing.MAC == approx(161.243301178992)
 
 def test_pMAC():
     wing = Wing.from_ribs(ribs)
     assert wing.pMAC.y == approx(234.016613076)
+
+
+
+
+@fixture
+def buddi():
+    return Wing.buddi_uav(3500, 0.85*1e6, 0.6, 200, "mh32-il")
+
+
+def test_props(buddi):
+    
+    
+    assert buddi.tr == 0.6
+    l=0.6
+
+    assert buddi.S == approx(0.85*1e6)
+    assert buddi.b == approx(3500) 
+    assert buddi.AR == buddi.b**2 / buddi.S
+    i=buddi.panels[0]
+    o = buddi.panels[1]
+    assert buddi.MAC == 2*(i.MAC * i.area + o.MAC * o.area) / buddi.S 
+
+    assert buddi.pMAC.y == (i.pMAC.y * i.area + (o.y + o.pMAC.y) * o.area) / (buddi.S * 0.5)
+
+    assert buddi.panels[0].SMC == approx(288.53465131)
+    assert buddi.panels[0].root.chord == approx(288.53465131)
+
+    assert buddi.pMAC.x == buddi.pMAC.y * o.le_sweep_distance / (buddi.b * 0.5)

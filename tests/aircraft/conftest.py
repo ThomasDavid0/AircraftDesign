@@ -13,7 +13,6 @@ def _panel():
             Point(200, 100, 100),
             Euler(np.radians(-5), 0.0, 0.0)
         ),
-        True, 
         [Rib.create("e1200-il", 300, Point.zeros(), 0, 4),
         Rib.create("e1200-il", 300, Point(200, 500, 0), 0, 4)]
     )

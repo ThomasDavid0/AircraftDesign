@@ -49,7 +49,7 @@ class Rib(Airfoil):
 
     def scale(self, fac: float):
         return Rib(
-            Transformation(self.transform.translation*2, self.transform.rotation),
+            Transformation(self.transform.translation * fac, self.transform.rotation),
             self.name,
             self.points * fac
         )

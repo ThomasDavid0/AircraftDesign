@@ -1,21 +1,10 @@
-import pytest
+from re import I
+
+from pytest import approx
 from acdesign.aircraft import Panel, Rib, Airfoil
 from geometry import Transformation, Point, Quaternion, Euler
 import numpy as np
-
-
-@pytest.fixture
-def _panel():
-    return Panel(
-        "testpanel",
-        Transformation.build(
-            Point(200, 100, 100),
-            Euler(np.radians(-5), 0.0, 0.0)
-        ),
-        True, 
-        [Rib.create("e1200-il", 300, Point.zeros(), 0, 4),
-        Rib.create("e1200-il", 300, Point(200, 500, 0), 0, 4)]
-    )
+from .conftest import _panel
 
 
 def test_area(_panel):
@@ -28,7 +17,7 @@ def test_taper_ratio(_panel):
     assert _panel.taper_ratio == 1.0
 
 def test_le_sweep_angle(_panel):
-    pytest.approx(_panel.le_sweep_angle, np.arctan2(200,500)) 
+    approx(_panel.le_sweep_angle, np.arctan2(200,500)) 
 
 
 panel = {
@@ -36,7 +25,6 @@ panel = {
     "acpos": {"x":-200,"y": 100,"z": 0},
     "dihedral": 5.0,
     "incidence": 0.0,
-    "symm": True,
     "length": 500,
     "sweep": 200,
     "inbd": {
@@ -57,8 +45,23 @@ panel = {
 def test_parse_panel():
     _panel = Panel.create(**panel)
 
-    assert _panel.symm == True
+
 
     assert _panel.transform.translation == Point(-200, 100, 0.0)
     
     assert isinstance(_panel.inbd, Rib)
+
+
+
+def test_props():
+    p = Panel.create(**panel)
+
+    assert p.area == 175 * 500
+    assert p.SMC == np.mean([150,200])
+    assert p.taper_ratio == 150 / 200
+    assert p.le_sweep_distance == 200
+    l = p.taper_ratio
+    assert p.MAC == approx((2/3) * p.root.chord * ((1+l+l**2)/(1+l)))
+
+    assert p.pMAC.y == (1/3)*((1+2*l)/(1+l))
+    assert p.pMAC.x == p.le_sweep_distance * p.pMAC.y / p.semispan

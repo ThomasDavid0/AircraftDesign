@@ -3,6 +3,7 @@ from typing import List
 from .panel import Panel
 from .body import Body
 from .mass import Mass
+from .wing import Wing
 import numpy as np
 
 
@@ -29,7 +30,6 @@ class Plane:
         )
 
 
-
     @property
     def sref(self) -> float:
         return sum([p.area for p in self.panels if "wing" in p.name])
@@ -42,4 +42,19 @@ class Plane:
     def bref(self) -> float:
         return max([p.ymax for p in self.panels]) * 2
 
+
+class ConventionalPlane(Plane):
+    def __init__(self, name, wing, tail, fin, bodies, masses):
+        self.wing = wing
+        self.tails = tail
+        self.fins = fin
+        super().__init__(
+            name, 
+            wing.panels + tail.panels + fin.panels, 
+            bodies, 
+            masses
+        )
     
+    
+
+
