@@ -65,3 +65,6 @@ def test_props():
 
     assert p.pMAC.y == (1/3)*((1+2*l)/(1+l))
     assert p.pMAC.x == p.le_sweep_distance * p.pMAC.y / p.semispan
+
+    
+
