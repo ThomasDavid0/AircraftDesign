@@ -52,11 +52,10 @@ def test_pMAC():
 
 @fixture
 def buddi():
-    return Wing.buddi_uav(3500, 0.85*1e6, 0.6, 200, "mh32-il")
+    return Wing.double_taper("wing", 3500, 0.85*1e6, 0.6, 100, ["fx63137-il","fx63137-il","mh32-il","mh32-il"])
 
 
-def test_props(buddi):
-    
+def test_double_taper(buddi):
     
     assert buddi.tr == 0.6
     l=0.6
@@ -70,7 +69,7 @@ def test_props(buddi):
 
     assert buddi.pMAC.y == (i.pMAC.y * i.area + (o.y + o.pMAC.y) * o.area) / (buddi.S * 0.5)
 
-    assert buddi.panels[0].SMC == approx(288.53465131)
-    assert buddi.panels[0].root.chord == approx(288.53465131)
+    assert buddi.panels[0].SMC == approx(286.9760155574762)
+    assert buddi.panels[0].root.chord == approx(286.9760155574762)
 
-    assert buddi.pMAC.x == buddi.pMAC.y * o.le_sweep_distance / (buddi.b * 0.5)
+    #assert buddi.pMAC.x == buddi.pMAC.y * o.le_sweep_distance / (buddi.b * 0.5)

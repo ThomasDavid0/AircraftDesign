@@ -46,8 +46,8 @@ class Plane:
 class ConventionalPlane(Plane):
     def __init__(self, name, wing, tail, fin, bodies, masses):
         self.wing = wing
-        self.tails = tail
-        self.fins = fin
+        self.tail = tail
+        self.fin = fin
         super().__init__(
             name, 
             wing.panels + tail.panels + fin.panels, 
