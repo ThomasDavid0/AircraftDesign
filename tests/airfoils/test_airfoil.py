@@ -1,5 +1,5 @@
 
-from acdesign.aircraft.airfoil import Airfoil
+from acdesign.airfoils.airfoil import Airfoil
 import numpy as np
 import pytest
 from geometry import Point

@@ -1,4 +1,4 @@
-from .airfoil import Airfoil
+from acdesign.airfoils.airfoil import Airfoil
 from geometry import Transformation, Point, Quaternion, Euler, P0
 import numpy as np
 

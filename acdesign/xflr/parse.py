@@ -4,7 +4,7 @@ from geometry import Point
 from acdesign.aircraft.plane import Plane
 from acdesign.aircraft.panel import Panel
 
-from acdesign.aircraft.airfoil import Airfoil
+from acdesign.airfoils.airfoil import Airfoil
 
 
 def parse_xflr_plane(file: str) -> Plane:
