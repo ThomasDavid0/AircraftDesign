@@ -15,7 +15,7 @@ def test_read_next_re_table_lft():
         re = lftp.read_next_re_table()
     assert isinstance(re, pd.DataFrame)
     assert np.all(re.re == 61000)
-    assert not np.all(re.direc == 1)
+    assert not np.all(re.pre_stall == 1)
 
 
 def test_read_next_re_table_drg_single_entry():
@@ -25,7 +25,7 @@ def test_read_next_re_table_drg_single_entry():
         re = lftp.read_next_re_table()
     assert isinstance(re, pd.DataFrame)
     assert np.all(re.re == 99000)
-    assert np.all(re.direc == 1)
+    assert np.all(re.pre_stall == 1)
 
 
 def test_read_next_re_table_drg():
@@ -35,7 +35,7 @@ def test_read_next_re_table_drg():
         re = lftp.read_next_re_table()
     assert isinstance(re, pd.DataFrame)
     assert np.all(re.re == 100600)
-    assert np.all(re.direc == 1)
+    assert np.all(re.pre_stall == 1)
 
 
 
@@ -45,7 +45,7 @@ def test_read_all():
         res = lftp.read_all()
     
     assert isinstance(res, pd.DataFrame)
-    assert np.all(res.columns == ["alpha", "Cl", "Cm", "re", "direc"])
+    assert np.all(res.columns == ["alpha", "Cl", "Cm", "re", "pre_stall"])
 
 
 @fixture
@@ -53,13 +53,13 @@ def s1223():
     return UIUCPolars.from_files('tests/airfoils/S1223.LFT', 'tests/airfoils/S1223.DRG')
 
 def test_alpha_to_cl(s1223):
-    assert s1223.alpha_to_cl(122600, 1.53)[0] == approx(
+    assert s1223.alpha_to_cl([122600, 1.53])[0] == approx(
         s1223.lift.loc[
             np.logical_and(s1223.lift.alpha==1.53, s1223.lift.re==122600), :
         ].Cl.item(),
         1e-2
     )
-    assert s1223.alpha_to_cl(122600, np.mean([1.53, 2.57])) == approx(np.mean([1.204,1.297]), 1e-2)
+    assert s1223.alpha_to_cl([122600, np.mean([1.53, 2.57])]) == approx(np.mean([1.204,1.297]), 1e-5)
 
 def test_lookup(s1223):
     df = s1223.lookup(re=[100000, 200000], cl=[0.1,0.2,0.8])

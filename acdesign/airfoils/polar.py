@@ -1,7 +1,7 @@
 import numpy as np 
 import pandas as pd
 from io import TextIOWrapper
-from scipy.interpolate import interp2d
+from scipy.interpolate import interp2d, griddata
 from numbers import Number
 from typing import Union
 import urllib.request
@@ -43,11 +43,22 @@ class LFTDRGParser:
             headings = headings[:-1] + [f"scd{i}" for i in range(len(rows[0]) - 3)]
 
         df = pd.DataFrame(rows, columns = headings).astype("float").assign(re=re)
-        if len(df) > 1:
-            return df.assign(direc = np.sign(np.gradient(df.alpha)))
-        else:
-            return df.assign(direc=1)
 
+        direc = np.sign(np.gradient(df.Cl)) if len(df) > 1 else np.ones(1)
+        ist = len(df) if np.all(direc==1) else df.loc[direc < 0].iloc[0].name
+        arr = np.concatenate([np.ones(ist), -np.ones(len(df)-ist) ])
+        return df.assign(pre_stall=arr)
+
+
+def interpgrid(x,y,z, method="linear"):
+    def _interp(tests):
+        return griddata(
+            np.column_stack([x,y]), 
+            z.to_numpy(), 
+            tests,
+            method
+        )
+    return _interp
 
 
 class UIUCPolars:
@@ -55,13 +66,13 @@ class UIUCPolars:
         self.lift = lift
         self.drag = drag
 
-        self.pslift = self.lift.loc[self.lift.direc==1]
-        
-        self.alpha_to_cl = interp2d(self.pslift.re, self.pslift.alpha, self.pslift.Cl)
+        self.pslift = self.lift.loc[self.lift.pre_stall==1]
+    
+        self.alpha_to_cl = interpgrid(self.pslift.re, self.pslift.alpha, self.pslift.Cl)
 
-        self.cl_to_alpha = interp2d(self.pslift.re, self.pslift.Cl, self.pslift.alpha)
-        self.cl_to_cm = interp2d(self.pslift.re, self.pslift.Cl, self.pslift.Cm)
-        self.cl_to_cd = interp2d(self.drag.re, self.drag.Cl, self.drag.Cd)
+        self.cl_to_alpha = interpgrid(self.pslift.re, self.pslift.Cl, self.pslift.alpha)
+        self.cl_to_cm = interpgrid(self.pslift.re, self.pslift.Cl, self.pslift.Cm)
+        self.cl_to_cd = interpgrid(self.drag.re, self.drag.Cl, self.drag.Cd)
         
     def lookup(self, re:Union[list, Number], cl:Union[list, Number]) -> pd.DataFrame:
         re = [re] if isinstance(re, Number) else re
@@ -72,10 +83,10 @@ class UIUCPolars:
         return pd.DataFrame(
             np.column_stack([
                 tests[:,0],
-                [r for c in self.cl_to_alpha(re, cl) for r in c],
+                self.cl_to_alpha(tests),
                 tests[:,1],
-                [r for c in self.cl_to_cm(re, cl) for r in c],
-                [r for c in self.cl_to_cd(re, cl) for r in c]
+                self.cl_to_cm(tests),
+                self.cl_to_cd(tests)
             ]),
             columns=["re", "alpha", "Cl", "Cm", "Cd"]
         )
