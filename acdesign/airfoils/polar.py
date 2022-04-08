@@ -52,12 +52,24 @@ class LFTDRGParser:
 
 def interpgrid(x,y,z, method="linear"):
     def _interp(tests):
-        return griddata(
+        res = griddata(
             np.column_stack([x,y]), 
             z.to_numpy(), 
             tests,
             method
         )
+        nans = np.isnan(res)
+        if np.any(nans):
+
+            resnan = griddata(
+                np.column_stack([x,y]), 
+                z.to_numpy(), 
+                tests,
+                method="nearest",
+            )
+            res[nans] = resnan[nans]
+        return res
+
     return _interp
 
 
@@ -73,23 +85,24 @@ class UIUCPolars:
         self.cl_to_alpha = interpgrid(self.pslift.re, self.pslift.Cl, self.pslift.alpha)
         self.cl_to_cm = interpgrid(self.pslift.re, self.pslift.Cl, self.pslift.Cm)
         self.cl_to_cd = interpgrid(self.drag.re, self.drag.Cl, self.drag.Cd)
-        
-    def lookup(self, re:Union[list, Number], cl:Union[list, Number]) -> pd.DataFrame:
-        re = [re] if isinstance(re, Number) else re
-        cl = [cl] if isinstance(cl, Number) else cl
+    
 
-        tests = np.array([[r, c] for c in cl for r in re])
-
+    def apply(self, recl: np.ndarray) -> pd.DataFrame:
         return pd.DataFrame(
             np.column_stack([
-                tests[:,0],
-                self.cl_to_alpha(tests),
-                tests[:,1],
-                self.cl_to_cm(tests),
-                self.cl_to_cd(tests)
+                recl[:,0],
+                self.cl_to_alpha(recl),
+                recl[:,1],
+                self.cl_to_cm(recl),
+                self.cl_to_cd(recl)
             ]),
             columns=["re", "alpha", "Cl", "Cm", "Cd"]
         )
+
+    def lookup(self, re:Union[list, Number], cl:Union[list, Number]) -> pd.DataFrame:
+        re = [re] if isinstance(re, Number) else re
+        cl = [cl] if isinstance(cl, Number) else cl        
+        return self.apply(np.array([[r, c] for c in cl for r in re]))
 
     def alookup(self, re: Union[list, Number], alpha:Union[list, Number]) -> pd.DataFrame:
         return self.lookup(re, self.alpha_to_cl(re, alpha))
@@ -116,6 +129,9 @@ class UIUCPolars:
                 pass
         else:
             return None
+
+
+
 
 
 def _list_uiucurl(vol):

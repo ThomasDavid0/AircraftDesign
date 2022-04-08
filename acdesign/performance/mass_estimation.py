@@ -1,9 +1,9 @@
-from .aero import AeroModel
+from .aero import AircraftAero
 from .motor import Propulsion
 
 
 
-def estimate_mass(aero: AeroModel, batt: Propulsion):
+def estimate_mass(aero: AircraftAero, batt: Propulsion):
     masses = dict(
         axi_8118 = 3 * 540,
         speed_cont=3*100,
@@ -13,7 +13,7 @@ def estimate_mass(aero: AeroModel, batt: Propulsion):
         cables = 100,
         payload=1000,
         tilt_mechanism = 3*150,
-        structure = (1 + 0.3 * aero.b**2 + aero.AR / 5) * 1000,
+        structure = (1 + 0.3 * aero.wing.b**2 + aero.wing.b / (aero.wing.smc * 5)) * 1000,
         battery = (batt.Ah * batt.v0 * 0.00392) * 1000,
     )
 

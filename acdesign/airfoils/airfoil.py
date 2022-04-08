@@ -27,6 +27,7 @@ class Airfoil:
 
     @staticmethod
     def download(airfoiltoolsname):
+        #https://m-selig.ae.illinois.edu/ads/coord_updates/la5055.dat
         _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)            
         return Airfoil.parse_selig(_file[0])
 

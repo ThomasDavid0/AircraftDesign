@@ -5,23 +5,29 @@ import pandas as pd
 
 from acdesign.atmosphere import Atmosphere
 from scipy.optimize import minimize
-from acdesign.performance.aero import AeroModel
+from acdesign.performance.aero import FuseAero, WingAero, AircraftAero
 from acdesign.performance.motor import Propulsion
 from acdesign.performance.operating_point import OperatingPoint
 from acdesign.performance.mass_estimation import estimate_mass
+from acdesign.airfoils.polar import UIUCPolars
 
+clarky = UIUCPolars.download("CLARKYB")
+sa7038 = UIUCPolars.download("SA7038")
+e472 = UIUCPolars.download("E472")
 
 class Performance:
-    def __init__(self, op: OperatingPoint, aero: AeroModel, mot: Propulsion, mass: float, wind:float):
+    def __init__(self, op: OperatingPoint, aero: AircraftAero, mot: Propulsion, mass: float, wind:float):
         self.op = op
         self.aero = aero
         self.mot = mot
         self.mass = mass
-        self.wind=wind
+        self.wind = wind
 
-        self.CL = self.mass * 9.81 / (self.op.Q * self.aero.S)
-        self.CD = self.aero.CD0 + self.aero.k * self.CL**2
-
+        self.trim = self.aero.trim(op, mass)
+        
+        self.CL = np.sum(self.trim.gCl)
+        self.CD = np.sum(self.trim.gCd)       
+        
         self.D = self.op.Q * self.aero.S * self.CD
         self.preq = self.D * self.op.V
         self.endurance = self.mot.endurance(self.preq)
@@ -32,9 +38,28 @@ class Performance:
 
         
     @staticmethod
-    def build(atm, V, b, S, CD0, CLmax, cells, capacity, wind):
+    def build(atm, V, b, S, cells, capacity, wind):
         op = OperatingPoint(atm, V)
-        aero = AeroModel(b, S, CD0, CLmax)
+        aero = AircraftAero(
+            WingAero(
+                b, 
+                S, 
+                [clarky,sa7038],
+                [0, 1/3, 1]
+            ),
+            WingAero(
+                0.2*S,
+                np.sqrt(0.2*S/3.5),
+                [e472],
+                [0,1]
+            ),
+            FuseAero(
+                b/2.5,
+                0.125
+            ),
+            1.3,
+            0.02
+        )
         mot = Propulsion.lipo(cells, capacity)
         return Performance(op,aero,mot,estimate_mass(aero, mot), wind)
 
@@ -62,7 +87,6 @@ class Performance:
             b=self.aero.b,
             S=self.aero.S,
             AR=self.aero.AR,
-            CD0=self.aero.CD0,
             CLMax=self.aero.CLmax,
             mass=self.mass,
             cells=self.mot.lipo_cells,
@@ -99,7 +123,7 @@ if __name__ == '__main__':
         res = Performance.optimize(
             Atmosphere.alt(3000),
             dict(b=4.0, S=4*0.2, V=25.0),
-            dict(CD0=0.02, CLmax=1.5, cells=10, capacity=25.5, wind=wind),
+            dict(cells=10, capacity=25.5, wind=wind),
             cost=cost,
             bounds=[(2.0, 5.0), (0.2, 2.0), (5.0, 50.0)],
             method="nelder-mead"
