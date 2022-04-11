@@ -23,7 +23,7 @@ class Performance:
         self.mass = mass
         self.wind = wind
 
-        self.trim = self.aero.trim(op, mass)
+        self.trim = self.aero.quick_trim(op, mass)
         
         self.CL = np.sum(self.trim.gCl)
         self.CD = np.sum(self.trim.gCd)       
@@ -57,8 +57,8 @@ class Performance:
                 b/2.5,
                 0.125
             ),
-            1.3,
-            0.02
+            0.02,
+            b/3
         )
         mot = Propulsion.lipo(cells, capacity)
         return Performance(op,aero,mot,estimate_mass(aero, mot), wind)
@@ -84,9 +84,9 @@ class Performance:
 
     def dump(self):
         return dict(
-            b=self.aero.b,
-            S=self.aero.S,
-            AR=self.aero.AR,
+            b=self.aero.wing.b,
+            S=self.aero.wing.S,
+            AR=self.aero.wing.b**2 / self.aero.wing.S,
             CLMax=self.aero.CLmax,
             mass=self.mass,
             cells=self.mot.lipo_cells,
@@ -119,14 +119,15 @@ def cost(perf: Performance):
 if __name__ == '__main__':
 
     perfs = []
-    for wind in np.linspace(0.0, 20.0, 10):
+    for wind in np.linspace(0.0, 10.0, 5):
+        
         res = Performance.optimize(
             Atmosphere.alt(3000),
             dict(b=4.0, S=4*0.2, V=25.0),
             dict(cells=10, capacity=25.5, wind=wind),
             cost=cost,
-            bounds=[(2.0, 5.0), (0.2, 2.0), (5.0, 50.0)],
-            method="nelder-mead"
+            bounds=[(3.5, 5.0), (0.2, 2.0), (5.0, 50.0)],
+            #method="nelder-mead"
         )
         perfs.append(res.perf)
 

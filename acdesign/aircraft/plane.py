@@ -5,7 +5,7 @@ from .body import Body
 from .mass import Mass
 from .wing import Wing
 import numpy as np
-
+from json import load
 
 
 
@@ -56,5 +56,14 @@ class ConventionalPlane(Plane):
         )
     
     
-
-
+    @staticmethod
+    def parse_json(file):
+        with open(file, "r") as f:
+            plane = Plane.create(**load(f))
+        return ConventionalPlane(
+            plane.name,
+            Wing([p for p in plane.panels if "wing" in p.name]),
+            Wing([p for p in plane.panels if "tail" in p.name]),
+            Wing([p for p in plane.panels if "fin" in p.name]),
+            plane.bodies, plane.masses
+        )

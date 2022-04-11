@@ -58,10 +58,11 @@ class WingAero:
             dict: containing the wing S, c, Cl, Cd, re and Cm
         """
         re = op.atm.rho * op.V * self.smc / op.atm.mu
+        
         sload = spanload(np.linspace(0,1,n))
+        sload = sload / np.mean(sload) 
         
-        
-        polars = [p.lookup(re, cl * sload / np.mean(sload)) for p in self.polars]
+        polars = [p.lookup(re, cl * sload) for p in self.polars]
         
         sst = [(int(n*s0), int(n*s1)) for s0, s1 in zip(self.rib_locs[:-1], self.rib_locs[1:])]
         
@@ -69,7 +70,14 @@ class WingAero:
             p.iloc[s[0]:s[1]] for s, p in zip(sst, polars)
         ]).mean()
  
-        return dict(S=self.S, c=self.smc,**res)
+        return dict(
+            S=self.S, 
+            c=self.smc,
+            Cl=res.Cl,
+            Cd=res.Cd,
+            Cm=res.Cm,
+            re=re
+        )
 
 
 class AircraftAero:
@@ -95,15 +103,36 @@ class AircraftAero:
             op.Q * self.wing.S * wing_cl * self.pw - tail_force * self.pt
 
 
+    def quick_trim(self, op: OperatingPoint, mass: float):
+        # this is not proper trimming but a guess that should be quicker than trim
+        mom = self.get_moment(op, mass, 0.0)
+        tfreq= mom / self.pt
+        tclreq = tfreq / (op.Q * self.tail.S)
+        wingcl = (mass * 9.81 + tfreq) / (op.Q * self.wing.S)
+        
+        df = pd.DataFrame(
+            dict(
+                wing=self.wing(op, wingcl),
+                tail=self.tail(op, tclreq),
+                fuse=self.fus(op),
+            )
+        ).T.assign(p=[self.pw, self.pt, 0])
+        
+        return df.assign(
+            gCl = df.Cl * df.S / self.wing.S, 
+            gCd = df.Cd * df.S / self.wing.S,
+        )
+        
     def trim(self, op: OperatingPoint, mass: float):
-        res = minimize(lambda tf: abs(self.get_moment(op, mass, tf)), -0.5)
-        tail_force = op.Q * self.tail.S * res.x
+        # TODO this makes it too slow for geometry optimization
+        tailcl = minimize(lambda tf: abs(self.get_moment(op, mass, tf)), -0.5).x
+        tail_force = op.Q * self.tail.S * tailcl
         wingcl = (mass * 9.81 + tail_force) / (op.Q * self.wing.S)
         
         df = pd.DataFrame(
             dict(
                 wing=self.wing(op, wingcl),
-                tail=self.tail(op, res.x),
+                tail=self.tail(op, tailcl),
                 fuse=self.fus(op),
             )
         ).T.assign(p=[self.pw, self.pt, 0])

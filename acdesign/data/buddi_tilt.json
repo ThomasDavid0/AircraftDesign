@@ -7,60 +7,57 @@
             "acpos": {"x":-300,"y": 0,"z": 0},
             "dihedral": 0.0,
             "incidence": 0.0,
-            "symm": "y",
             "length": 500,
             "sweep": 0,
             "inbd": {
-                "airfoil": "e174-il",
-                "chord": 300,
+                "airfoil": "clarky-il",
+                "chord": 350,
                 "te_thickness": 1.5,
                 "incidence": 0.0
             },
             "otbd": {
-                "airfoil": "e174-il",
-                "chord": 300,
+                "airfoil": "clarky-il",
+                "chord": 350,
                 "te_thickness": 1.5,
                 "incidence": 0.0
             }
         },
         {
             "name": "wing_outer",
-            "acpos": {"x":-300,"y": 540,"z": 0},
+            "acpos": {"x":-350,"y": 560,"z": 0},
             "dihedral": 0.0,
             "incidence": 0.0,
-            "symm": "y",
-            "length": 1600,
+            "length": 1250,
             "sweep": 100,
             "inbd": {
-                "airfoil": "e174-il",
-                "chord": 300,
+                "airfoil": "sa7038-il",
+                "chord": 350,
                 "te_thickness": 1.5,
                 "incidence": 0.0
             },
             "otbd": {
-                "airfoil": "e174-il",
-                "chord": 150,
+                "airfoil": "sa7038-il",
+                "chord": 200,
                 "te_thickness": 1.5,
                 "incidence": 0.0
             }
         },
         {
-            "name": "htail",
+            "name": "tail",
             "acpos": {"x":-1200,"y": 0,"z": 0},
             "dihedral": 0.0,
             "incidence": 0.0,
-            "symm": "y",
-            "length": 450,
-            "sweep": 0,
+            "length": 500,
+            "sweep": 40,
             "inbd": {
-                "airfoil": "e230-il",
-                "chord": 180,
+                "airfoil": "E472-il",
+                "chord": 230,
                 "te_thickness": 1,
                 "incidence": 0.0
             },
             "otbd": {
-                "airfoil": "e230-il",
-                "chord": 150,
+                "airfoil": "E472-il",
+                "chord": 190,
                 "te_thickness": 1,
                 "incidence": 0.0
             }
@@ -70,7 +67,6 @@
             "acpos": {"x":-1400,"y": 0,"z": 0},
             "dihedral": 90.0,
             "incidence": 0.0,
-            "symm": "z",
             "length": 410,
             "sweep": 100,
             "inbd": {
@@ -93,7 +89,7 @@
         {
             "name": "total",
             "cg": {"x":-511,"y": 0,"z": 0},
-            "mass": 4.6,
+            "mass": 16,
             "inertia": [
                 [1, 0, 0],
                 [0, 1, 0],

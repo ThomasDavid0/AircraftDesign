@@ -36,3 +36,11 @@ def test_cd(op, dmodel):
     df = dmodel.trim(op, 10)
     assert df.gCd.to_list() == approx([0.008256402853323611, 0.004165965541408166, 0.003907806637803323])
 
+
+
+
+def test_quick_trim(op, dmodel):
+    df = dmodel.trim(op, 10)
+    df2 = dmodel.quick_trim(op, 10)
+
+    pass
