@@ -67,3 +67,5 @@ class ConventionalPlane(Plane):
             Wing([p for p in plane.panels if "fin" in p.name]),
             plane.bodies, plane.masses
         )
+
+    

@@ -1,32 +1,40 @@
-from acdesign.performance.performance import Performance
-from acdesign.performance.aero import AeroModel
-from acdesign.performance.motor import Propulsion
-from acdesign.performance.operating_point import OperatingPoint
+from acdesign.airfoils.polar import UIUCPolars
 from acdesign.atmosphere import Atmosphere
-import numpy as np
-import pandas as pd
 
+
+
+pol = UIUCPolars.download("CLARKYB")
+
+b = 1.205
+c = 0.2
+S = b * c
+AR = b/c
+
+u=12
 
 atm = Atmosphere.alt(0)
 
+mass = 1.2
 
-perfs = []
-for mass in np.linspace(0.1,5, 10):
-    perf = Performance(
-        OperatingPoint(atm, 10),
-        AeroModel(1.206, 0.3, 0.03, 1.5),
-        Propulsion.lipo(3, 1200),
-        mass,#1.345, 
-        0
-    )
-    perfs.append(perf)
+re = atm.rho * u * c / atm.mu
+
+import numpy as np
 
 
-df = pd.DataFrame([p.dump() for p in perfs])
-print(df)
+drg = pol.drag.loc[pol.drag.re == 60700]
+Cd0 = drg.Cd.min()
+
 import plotly.graph_objects as go
-#
-#
+
+
+cls = np.linspace(-0.5, 1.5, 20)
+
+k = 1 / (np.pi * AR )
+
+cds = Cd0 + k * cls ** 2
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=df.CD, y=df.CL))
+fig.add_trace(go.Scatter(x=cls, y = cds, name="3D wing"))
+fig.add_trace(go.Scatter(x=drg.Cl, y = drg.Cd, name = "2D Section"))
+
+fig.update_layout(yaxis=dict(range=(0, 0.25), title="Cd"), xaxis=dict(title="Cl"))
 fig.show()
