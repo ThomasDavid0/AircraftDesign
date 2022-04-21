@@ -1,7 +1,7 @@
 from tkinter.messagebox import RETRY
 from geometry import Point
 from typing import List, Tuple, Union, Dict, NamedTuple
-from acdesign.aircraft import Panel, Rib, Plane, Body, Mass
+from acdesign.aircraft import Panel, Rib, Plane
 from collections import namedtuple
 import itertools
 from enum import Enum

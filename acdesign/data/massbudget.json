@@ -1,0 +1,19 @@
+[
+    {
+        "name": "battery1",
+        "cg": {"x": 0, "y": 0, "z": 0},
+        "m": 0.7,
+        "geom": {
+            "shape": "cuboid",
+            "lx": 200,
+            "ly": 30,
+            "lz": 70
+        }
+    },
+    {
+        "name": "motor",
+        "cg": {"x": 0, "y": 0, "z": 0},
+        "m": 0.4,
+        "geom": {"shape": "point"}
+    }
+]

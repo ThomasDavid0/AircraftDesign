@@ -2,7 +2,7 @@ from geometry import Point, Transformation
 from typing import List
 from .panel import Panel
 from .body import Body
-from .mass import Mass
+from .component_mass import ComponentMass
 from .wing import Wing
 import numpy as np
 from json import load
@@ -12,12 +12,12 @@ from json import load
 class Plane:
     """An aircraft. Origin on nose, x axis forward, y axis to right, z axis down.
     """
-    def __init__(self, name: str, panels: List[Panel], bodies:List[Body], masses: List[Mass]):
+    def __init__(self, name: str, panels: List[Panel], bodies:List[Body], masses: List[ComponentMass]):
         self.name = name
         self.panels = panels
         self.bodies = bodies
         self.masses = masses
-        self.mass = Mass.combine(masses)
+        self.mass = ComponentMass.combine(masses)
 
     @staticmethod
     def create(name, panels, bodies=[], masses=[], version=0.01):
@@ -26,7 +26,7 @@ class Plane:
             name,
             [Panel.create(**dat) for dat in panels],
             [Body.create(**dat) for dat in bodies],
-            [Mass.create(**mass) for mass in masses]
+            [ComponentMass.create(**mass) for mass in masses]
         )
 
 
