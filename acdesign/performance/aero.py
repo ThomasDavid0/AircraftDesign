@@ -35,7 +35,7 @@ class WingAero:
         self.polars = polars
         self.rib_locs = rib_locs
         self.smc = self.S / self.b
-
+        self.AR = self.b / self.smc
 
     def __call__(
         self, 
@@ -69,12 +69,14 @@ class WingAero:
         res = pd.concat([
             p.iloc[s[0]:s[1]] for s, p in zip(sst, polars)
         ]).mean()
- 
+
+
+
         return dict(
             S=self.S, 
             c=self.smc,
             Cl=res.Cl,
-            Cd=res.Cd,
+            Cd=res.Cd + res.Cl**2 / (np.pi * self.AR),
             Cm=res.Cm,
             re=re
         )
