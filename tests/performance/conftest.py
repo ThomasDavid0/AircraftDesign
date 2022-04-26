@@ -18,8 +18,8 @@ def wing():
         3.205, 
         0.733561, 
         [
-            UIUCPolars.download("CLARKYB"),
-            UIUCPolars.download("SA7038")
+            UIUCPolars.local("CLARKYB"),
+            UIUCPolars.local("SA7038")
         ],
         [0, 1/3, 1]
     )
@@ -33,7 +33,7 @@ def dmodel(wing, fd):
         WingAero(
             0.716584, 
             0.146712, 
-            [UIUCPolars.download("E472")],
+            [UIUCPolars.local("E472")],
             [0,1]
         ),
         fd,

@@ -70,7 +70,7 @@ def test_lookup(s1223):
 
 
 def test_download():
-    clarky = UIUCPolars.download("CLARKYB")
+    clarky = UIUCPolars.local("CLARKYB")
     assert isinstance(clarky, UIUCPolars)
 
 def test_list_uiuc():

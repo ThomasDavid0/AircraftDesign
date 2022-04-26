@@ -1,0 +1,193 @@
+Airfoil: S823
+Builder: M. Allen
+Comment: clean
+
+Number of Reynolds #'s:
+ 18 
+
+Average Reynolds #:
+ 102100 
+Number of angles of attack:
+ 10 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -1.64  -0.033   0.0489   0.0458   0.0544   0.0507   0.0446
+ -0.13   0.107   0.0441   0.0434   0.0505   0.0411   0.0416
+  1.55   0.288   0.0425   0.0425   0.0446   0.0424   0.0403
+  2.98   0.430   0.0430   0.0405   0.0451   0.0425   0.0438
+  4.36   0.605   0.0382   0.0366   0.0387   0.0409   0.0368
+  5.99   0.776   0.0358   0.0332   0.0386   0.0371   0.0341
+  7.58   0.926   0.0304   0.0283   0.0334   0.0299   0.0300
+  9.24   1.079   0.0289   0.0286   0.0279   0.0305   0.0286
+ 10.59   1.178   0.0273   0.0278   0.0236   0.0277   0.0301
+ 12.24   1.190   0.0393   0.0300   0.0265   0.0549   0.0459
+Tabulated from data in file JG00454.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 203000 
+Number of angles of attack:
+ 11 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -3.19  -0.094   0.0212   0.0198   0.0209   0.0236   0.0204
+ -1.46   0.078   0.0194   0.0179   0.0199   0.0215   0.0185
+  0.41   0.281   0.0184   0.0179   0.0192   0.0185   0.0178
+  1.54   0.407   0.0187   0.0181   0.0195   0.0187   0.0185
+  3.06   0.579   0.0192   0.0191   0.0194   0.0195   0.0189
+  4.68   0.753   0.0191   0.0191   0.0185   0.0194   0.0193
+  6.13   0.898   0.0197   0.0199   0.0190   0.0204   0.0193
+  7.68   1.041   0.0195   0.0190   0.0188   0.0216   0.0187
+  9.33   1.169   0.0214   0.0206   0.0206   0.0235   0.0209
+ 10.70   1.203   0.0307   0.0256   0.0221   0.0353   0.0396
+ 12.20   1.185   0.0602   0.0404   0.0235   0.0827   0.0941
+Tabulated from data in file JG00457.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 206500 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -4.74  -0.224   0.0230   0.0216   0.0223   0.0257   0.0225
+Tabulated from data in file AB00458.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 305300 
+Number of angles of attack:
+ 11 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -4.90  -0.263   0.0173   0.0166   0.0162   0.0195   0.0167
+ -3.28  -0.112   0.0167   0.0157   0.0156   0.0198   0.0156
+ -1.84   0.039   0.0160   0.0146   0.0160   0.0189   0.0146
+ -0.21   0.221   0.0154   0.0140   0.0165   0.0166   0.0145
+  1.30   0.394   0.0147   0.0140   0.0161   0.0145   0.0140
+  2.85   0.570   0.0146   0.0147   0.0151   0.0140   0.0145
+  4.45   0.744   0.0151   0.0153   0.0148   0.0150   0.0153
+  5.99   0.902   0.0155   0.0159   0.0144   0.0160   0.0157
+  7.52   1.041   0.0166   0.0160   0.0148   0.0185   0.0170
+  9.24   1.158   0.0197   0.0198   0.0175   0.0213   0.0201
+ 10.82   1.184   0.0333   0.0286   0.0215   0.0367   0.0464
+Tabulated from data in file AB00461.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 307900 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -5.85  -0.348   0.0178   0.0174   0.0170   0.0189   0.0181
+Tabulated from data in file JG00462.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 412000 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -7.87  -0.544   0.0186   0.0183   0.0179   0.0184   0.0198
+Tabulated from data in file JG00465.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 408100 
+Number of angles of attack:
+ 13 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -7.84  -0.544   0.0186   0.0182   0.0180   0.0186   0.0196
+ -6.35  -0.401   0.0156   0.0155   0.0147   0.0161   0.0162
+ -4.80  -0.264   0.0148   0.0145   0.0135   0.0168   0.0145
+ -3.27  -0.121   0.0147   0.0139   0.0135   0.0179   0.0135
+ -1.76   0.042   0.0142   0.0127   0.0142   0.0173   0.0126
+ -0.22   0.220   0.0136   0.0123   0.0149   0.0147   0.0125
+  1.38   0.405   0.0128   0.0122   0.0140   0.0126   0.0124
+  2.83   0.573   0.0125   0.0126   0.0129   0.0119   0.0128
+  4.45   0.751   0.0127   0.0132   0.0122   0.0126   0.0130
+  5.97   0.904   0.0135   0.0138   0.0124   0.0138   0.0138
+  7.49   1.038   0.0146   0.0148   0.0132   0.0157   0.0149
+  9.06   1.132   0.0187   0.0187   0.0161   0.0204   0.0196
+ 10.54   1.159   0.0304   0.0253   0.0197   0.0362   0.0404
+Tabulated from data in file JG00464.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 510300 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -3.52  -0.126   0.0136   0.0128   0.0120   0.0165   0.0131
+Tabulated from data in file JG00466.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 512500 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -1.55   0.090   0.0132   0.0114   0.0129   0.0156   0.0130
+Tabulated from data in file PG00467.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 509700 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -0.36   0.221   0.0129   0.0111   0.0137   0.0136   0.0131
+Tabulated from data in file PG00468.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 507700 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+  1.47   0.433   0.0119   0.0111   0.0127   0.0110   0.0126
+Tabulated from data in file PG00469.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 509600 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+  2.76   0.580   0.0117   0.0114   0.0114   0.0112   0.0129
+Tabulated from data in file PG00470.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 508300 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+  4.41   0.758   0.0119   0.0120   0.0107   0.0116   0.0132
+Tabulated from data in file PG00471.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 504500 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+  6.03   0.918   0.0128   0.0127   0.0115   0.0128   0.0140
+Tabulated from data in file PG00472.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 503900 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+  7.63   1.052   0.0144   0.0156   0.0129   0.0143   0.0149
+Tabulated from data in file PG00473.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 504400 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+  9.07   1.129   0.0185   0.0199   0.0156   0.0192   0.0193
+Tabulated from data in file JG00474.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 504500 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ 10.45   1.151   0.0316   0.0229   0.0188   0.0414   0.0432
+Tabulated from data in file JG00475.DAT & reduced using program Q01.00L
+
+Average Reynolds #:
+ 510400 
+Number of angles of attack:
+ 1 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -4.75  -0.259   0.0138   0.0131   0.0121   0.0152   0.0148
+Tabulated from data in file JG00477.DAT & reduced using program Q01.00L
+
+File s823.drg created on 12-05-1997 at 15:25:59 using program FORMAT

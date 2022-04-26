@@ -87,7 +87,7 @@ def parse_avl_surface(avltups: List[namedtuple]) -> List[dict]:
             acpos=rp.to_dict(),
             dihedral=np.arctan2(dp.z[0], dp.y[0]),
             incidence=0,
-            symm=len(tups["Yduplicate"]) > 0,
+            #symm=len(tups["Yduplicate"]) > 0,
             length=dp.y[0],
             sweep=dp.x[0],
             inbd = parse_avl_section(rl),
@@ -117,7 +117,8 @@ def parse_avl_ac(avltups: List[namedtuple]) -> Plane:
                 y=tups["Header"][0][0].Yref,
                 z=tups["Header"][0][0].Zref
             ),
-            mass=4.6
+            m=4.6,
+            geom={"shape": "point"}
         )],
         0.01
     )

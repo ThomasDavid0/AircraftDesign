@@ -5,15 +5,18 @@ from .conftest import _panel
 import numpy as np
 from pytest import approx, fixture
 
-ribs = [
-    Rib.create("e174-il", 200, Point(0,   0,   0), 1),
-    Rib.create("e174-il", 200, Point(0,   80,  0), 1),
-    Rib.create("e174-il", 180, Point(20,  180, 0), 1),
-    Rib.create("e174-il", 160, Point(40,  400, 0), 1),
-    Rib.create("e174-il", 100, Point(100, 800, 0), 1),
-]
 
-def test_from_ribs():
+@fixture
+def ribs():
+    return [
+        Rib.create("e174-il", 200, Point(0,   0,   0), 1),
+        Rib.create("e174-il", 200, Point(0,   80,  0), 1),
+        Rib.create("e174-il", 180, Point(20,  180, 0), 1),
+        Rib.create("e174-il", 160, Point(40,  400, 0), 1),
+        Rib.create("e174-il", 100, Point(100, 800, 0), 1),
+    ]
+
+def test_from_ribs(ribs):
     wing = Wing.from_ribs(ribs)
     assert len(wing.panels) == 4
     assert wing.panels[1].transform.translation == Point(0, 80, 0)
@@ -27,13 +30,13 @@ def test_S(_panel):
 def test_b(_panel):
     assert Wing([_panel]).b == 600 * 2
 
-def test_scale():
+def test_scale(ribs):
     wing = Wing.from_ribs(ribs)
     swing = wing.scale(2)
     assert swing.b == wing.b * 2
     assert swing.S == approx((np.sqrt(wing.S) * 2)**2)
 
-def test_mean_chord():
+def test_mean_chord(ribs):
     wing = Wing.from_ribs(ribs)
     assert wing.SMC == 155.5
 

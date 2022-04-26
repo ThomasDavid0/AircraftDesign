@@ -18,7 +18,7 @@ def rib_dump_avl(rib: Rib) -> List[NamedTuple]:
 
 
 
-def panel_dump_avl(panel: Panel) -> List[NamedTuple]:
+def panel_dump_avl(panel: Panel, symm=True) -> List[NamedTuple]:
     #AVL works in x aft, yright, z up, everythin global, so some conversions done here.
     return kwdict["SURFACE"].dump(kwdict["SURFACE"].create(panel.name, 12, 1)) \
         + rib_dump_avl(

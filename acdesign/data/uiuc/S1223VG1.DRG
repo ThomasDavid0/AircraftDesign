@@ -1,0 +1,21 @@
+Airfoil: S1223
+Builder: Y. Tinel
+Comment: upper surface vortex generator type "A" @ x/c = 17%
+
+Number of Reynolds #'s:
+ 1 
+
+Average Reynolds #:
+ 200100 
+Number of angles of attack:
+ 6 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -0.43   0.975   0.0302   0.0300   0.0226   0.0318   0.0363
+  1.77   1.184   0.0336   0.0345   0.0254   0.0341   0.0404
+  3.78   1.352   0.0362   0.0386   0.0283   0.0339   0.0440
+  5.85   1.521   0.0410   0.0453   0.0333   0.0373   0.0481
+  7.70   1.653   0.0454   0.0514   0.0380   0.0407   0.0516
+  9.92   1.801   0.0527   0.0618   0.0460   0.0453   0.0575
+Tabulated from data in file MS00370.DAT & reduced using program Q01.00L
+
+File s1223vg1.drg created on 12-05-1997 at 15:25:59 using program FORMAT

@@ -83,8 +83,7 @@ class WingAero:
 
 
 def e_howe(M, lam, sw, Ne, toc, A):
-    """calculation of oswald efficiency factor
-    according to Howe 2000,
+    """calculation of oswald efficiency factor according to Howe 2000,
     ref https://www.fzt.haw-hamburg.de/pers/Scholz/HOOU/AircraftDesign_13_Drag.pdf
     M = flight mach number
     A = effective aspect ratio
@@ -93,11 +92,11 @@ def e_howe(M, lam, sw, Ne, toc, A):
     Ne = number of engines on the wing
     lam = taper ratio
     """
+
     def f(lam):
         return 0.005 * (1 + 1.5 * (lam-0.6)**2)
     _a = 1 + 0.12*M**6
     _b = (0.142 + f(lam) * A * (10 * toc)*0.33) / np.cos(sw)*2
-
     _c = 0.1 * (3 * Ne + 1) / (4+A)**0.8
     return 1 / (_a * (1 + _b + _c))
 

@@ -107,7 +107,7 @@ class UIUCPolars:
     def alookup(self, re: Union[list, Number], alpha:Union[list, Number]) -> pd.DataFrame:
         return self.lookup(re, self.alpha_to_cl(re, alpha))
         
-
+    @staticmethod
     def from_files(lft, drg):
         with open(lft, "r") as f:
             lftp = LFTDRGParser(f)
@@ -117,21 +117,24 @@ class UIUCPolars:
             drg = lftp.read_all()
         return UIUCPolars(lft, drg)
 
-
+    @staticmethod
     def download(airfoil_name: str):
+        return UIUCPolars.from_files(*UIUCPolars._get_uiuc_files(airfoil_name))
+
+    @staticmethod
+    def local(airfoil_name: str):
+        return UIUCPolars.from_files(*[f"acdesign/data/uiuc/{airfoil_name}.{ld}" for ld in ["LFT", "DRG"]])
+
+    @staticmethod
+    def _get_uiuc_files(airfoil_name):
         for vol in range(1,5):         
             uiucurl = f"https://m-selig.ae.illinois.edu/pd/pub/lsat/vol{vol}/{airfoil_name}"
             try:
-                return UIUCPolars.from_files(
-                    *[urllib.request.urlretrieve(f"{uiucurl}.{ld}")[0] for ld in ["LFT", "DRG"]]
-                )
+                return [urllib.request.urlretrieve(f"{uiucurl}.{ld}")[0] for ld in ["LFT", "DRG"]]
             except HTTPError:
                 pass
         else:
             return None
-
-
-
 
 
 def _list_uiucurl(vol):
@@ -147,3 +150,24 @@ import itertools
 
 def uiuc_airfoils():
     return list(itertools.chain(*[_list_uiucurl(i+1) for i in range(4)]))
+
+
+def list_url_files(url, extension):
+    resp = urllib.request.urlopen(url)
+    soup = BeautifulSoup(resp, features="html.parser")
+    def isaf(file):
+        return f".{extension}" in file
+
+    files = [node.get("href") for node in soup.find_all('a')]
+    return [f[:-4] for f in files if isaf(f)]
+
+
+
+
+if __name__ == '__main__':
+    for afname in uiuc_airfoils():
+        for fi, ld in zip(UIUCPolars._get_uiuc_files(afname), ["LFT", "DRG"]):
+            with open(f"acdesign/data/uiuc/{afname}.{ld}", "w") as fo:
+                with open(fi, "r") as fin:
+                    fo.write(fin.read())
+                    pass

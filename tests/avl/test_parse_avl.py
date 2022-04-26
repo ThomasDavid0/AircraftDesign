@@ -68,5 +68,5 @@ def test_parse_avl_ac(avltuples):
 
 
 def test_parse_avl(avlfile):
-    ac = Plane.parse_avl(avlfile)
+    ac = parse_avl(avlfile)
     assert isinstance(ac, Plane)

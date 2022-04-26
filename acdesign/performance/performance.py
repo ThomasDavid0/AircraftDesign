@@ -11,9 +11,9 @@ from acdesign.performance.operating_point import OperatingPoint
 from acdesign.performance.mass_estimation import estimate_mass
 from acdesign.airfoils.polar import UIUCPolars
 
-clarky = UIUCPolars.download("CLARKYB")
-sa7038 = UIUCPolars.download("SA7038")
-e472 = UIUCPolars.download("E472")
+clarky = UIUCPolars.local("CLARKYB")
+sa7038 = UIUCPolars.local("SA7038")
+e472 = UIUCPolars.local("E472")
 
 class Performance:
     def __init__(self, op: OperatingPoint, aero: AircraftAero, mot: Propulsion, mass: float, wind:float):
@@ -117,6 +117,7 @@ def cost(perf: Performance):
     
 
 if __name__ == '__main__':
+
 
     perfs = []
     for wind in np.linspace(0.0, 10.0, 5):

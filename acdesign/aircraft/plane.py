@@ -58,8 +58,11 @@ class ConventionalPlane(Plane):
     
     @staticmethod
     def parse_json(file):
-        with open(file, "r") as f:
+        if hasattr(file, 'read'):
             plane = Plane.create(**load(f))
+        else:
+            with open(file, "r") as f:
+                plane = Plane.create(**load(f))
         return ConventionalPlane(
             plane.name,
             Wing([p for p in plane.panels if "wing" in p.name]),

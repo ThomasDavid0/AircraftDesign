@@ -1,0 +1,18 @@
+Airfoil: S1223
+Builder: Y. Tinel
+Comment: gurney flap (h/c = 1.04%)
+
+Number of Reynolds #'s:
+ 1 
+
+Average Reynolds #:
+ 199400 
+Number of angles of attack:
+ 3 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -0.39   1.266   0.0241   0.0247   0.0231   0.0254   0.0234
+  3.62   1.636   0.0289   0.0288   0.0282   0.0302   0.0283
+  7.83   1.915   0.0364   0.0358   0.0368   0.0371   0.0358
+Tabulated from data in file PG00517.DAT & reduced using program Q01.00L
+
+File s1223gf1.drg created on 12-05-1997 at 15:25:59 using program FORMAT

@@ -10,13 +10,13 @@
             "length": 500,
             "sweep": 0,
             "inbd": {
-                "airfoil": "clarky-il",
+                "airfoil": "clarkysm-il",
                 "chord": 350,
                 "te_thickness": 1.5,
                 "incidence": 0.0
             },
             "otbd": {
-                "airfoil": "clarky-il",
+                "airfoil": "clarkysm-il",
                 "chord": 350,
                 "te_thickness": 1.5,
                 "incidence": 0.0
@@ -27,7 +27,7 @@
             "acpos": {"x":-350,"y": 560,"z": 0},
             "dihedral": 0.0,
             "incidence": 0.0,
-            "length": 1250,
+            "length": 1350,
             "sweep": 100,
             "inbd": {
                 "airfoil": "sa7038-il",
@@ -44,7 +44,7 @@
         },
         {
             "name": "tail",
-            "acpos": {"x":-1200,"y": 0,"z": 0},
+            "acpos": {"x":-1400,"y": 0,"z": 55},
             "dihedral": 0.0,
             "incidence": 0.0,
             "length": 500,
@@ -64,7 +64,7 @@
         },
         {
             "name": "fin",
-            "acpos": {"x":-1400,"y": 0,"z": 0},
+            "acpos": {"x":-1400,"y": 0,"z": 55},
             "dihedral": 90.0,
             "incidence": 0.0,
             "length": 410,
@@ -89,13 +89,8 @@
         {
             "name": "total",
             "cg": {"x":-511,"y": 0,"z": 0},
-            "mass": 16,
-            "inertia": [
-                [1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1]
-            ]
-
+            "m": 16,
+            "geom": {"shape": "point"}
         }
     ]
 }

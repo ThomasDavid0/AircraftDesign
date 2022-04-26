@@ -1,0 +1,24 @@
+Airfoil: FX 74-CL5-140 MOD
+Builder: C. Hollinger
+Comment: clean
+
+Number of Reynolds #'s:
+ 1 
+
+Average Reynolds #:
+ 199400 
+Number of angles of attack:
+ 9 
+ alpha /   Cl   /  Cd   /  Spanwise Cd's >>>
+ -1.80   0.611   0.0379   0.0367   0.0377   0.0390   0.0380
+ -0.47   0.859   0.0258   0.0251   0.0248   0.0277   0.0254
+  1.20   1.049   0.0223   0.0217   0.0213   0.0245   0.0218
+  2.71   1.200   0.0211   0.0209   0.0208   0.0221   0.0206
+  4.25   1.347   0.0234   0.0232   0.0227   0.0250   0.0228
+  5.60   1.468   0.0253   0.0250   0.0248   0.0264   0.0251
+  7.42   1.622   0.0285   0.0278   0.0285   0.0295   0.0283
+  9.05   1.749   0.0318   0.0310   0.0320   0.0328   0.0316
+ 10.48   1.850   0.0351   0.0349   0.0353   0.0356   0.0345
+Tabulated from data in file AB00185.DAT & reduced using program Q01.00L
+
+File fx74mod.drg created on 12-05-1997 at 15:25:58 using program FORMAT

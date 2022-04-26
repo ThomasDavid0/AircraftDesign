@@ -8,9 +8,11 @@ import numpy as np
 
 class WingProps:
     def __init__(self, w):
-        self.S = sum([p.area for p in w.panels]) * 2 if w.symm else 1
-        
-        self.b = (w.panels[-1].otbd.y + w.panels[-1].y) * 2 if w.symm else 1
+        self.S = sum([p.area for p in w.panels])
+        self.b = (w.panels[-1].otbd.y + w.panels[-1].y)[0] 
+        if w.symm:
+            self.S = self.S * 2
+            self.b = self.b * 2
 
         self.AR = self.b**2 / self.S
 
