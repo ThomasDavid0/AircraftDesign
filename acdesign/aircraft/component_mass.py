@@ -1,3 +1,4 @@
+from os import name
 from geometry import Point, Transformation, Mass
 import numpy as np
 from typing import List, Dict
@@ -41,3 +42,11 @@ class ComponentMass:
                 raise ValueError("unknown mass shape")
         
         return ComponentMass(name, Point(**cg), mass)
+
+    def dumpd(self):
+        return dict(
+            name=self.name,
+            cg=self.cg.to_dict(),
+            m=self.mass.m[0],
+            geom={"shape": "point"}
+        )

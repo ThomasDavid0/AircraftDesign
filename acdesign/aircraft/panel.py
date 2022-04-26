@@ -98,3 +98,25 @@ class Panel:
             ]
         )
 
+    def dumpd(self):
+        
+        return dict(
+            name = self.name, 
+            acpos = self.transform.translation.to_dict(),
+            dihedral = np.degrees(self.props.dihedral),
+            incidence = np.degrees(self.props.incidence),
+            length = self.props.semispan,
+            sweep = self.props.le_sweep_distance,
+            inbd = self.root.dumpd(),
+            otbd = self.tip.dumpd()
+        )
+
+    def apply_transformation(self, trans: Transformation):
+        return Panel(
+            self.name, 
+            Transformation(
+                trans.apply(self.transform.translation),
+                trans.apply(self.transform.rotation)
+            ),
+            self.ribs
+        )

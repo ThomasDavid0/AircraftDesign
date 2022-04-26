@@ -29,6 +29,14 @@ class Plane:
             [ComponentMass.create(**mass) for mass in masses]
         )
 
+    def dumpd(self):
+        return dict(
+            version=0.01,
+            name=self.name,
+            panels=[p.dumpd() for p in self.panels],
+            bodies=[b.dumpd() for b in self.bodies], 
+            masses=[m.dumpd() for m in self.masses],
+        )
 
     @property
     def sref(self) -> float:

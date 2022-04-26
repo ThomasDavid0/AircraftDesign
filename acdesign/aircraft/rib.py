@@ -33,6 +33,14 @@ class Rib(Airfoil):
             .set_te_thickness(te_thickness).points
         )
 
+    def dumpd(self):
+        return dict(
+            airfoil = self.name,
+            chord = self.chord,
+            te_thickness = self.te_thickness,
+            incidence= self.incidence
+        )
+
     def rename(self, name):
         return Rib(self.transform,name, self.points)
 

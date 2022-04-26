@@ -10,3 +10,9 @@ class Body:
     @staticmethod
     def create(name):
         return Body(name, Transformation())
+
+    def dumpd(self):
+        return dict(
+            name=self.name,
+            acpos=self.transform.translation.to_dict()
+        )

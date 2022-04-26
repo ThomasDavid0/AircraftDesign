@@ -56,14 +56,14 @@ class Wing:
         return Wing([p.scale(fac) for p in self.panels])
 
     @staticmethod
-    def straight_taper(name, b, S, TR, le_sweep, section:Union[str, List[str]], symm=True ):
+    def straight_taper(name, b, S, TR, le_sweep, section:Union[str, List[str]], dihedral=0, symm=True ):
         smc = S / b
         cr = 2 * smc / (b*(1+TR))
         ct = TR * cr
 
         return Wing([Panel(
             f"{name}",
-            Transformation(P0(),Euler(np.pi, 0, np.pi)),
+            Transformation(P0(),Euler(np.radians(dihedral) + np.pi, 0, np.pi)),
             [
                 Rib.create(section[0], cr, P0(), 2),
                 Rib.create(section[1], ct, Point(le_sweep, b/2, 0), 2)
@@ -72,7 +72,7 @@ class Wing:
 
 
     @staticmethod
-    def double_taper(name, b, S, TR, le_sweep, section:Union[str, List[str]], kink_loc = 12*25.4+100):
+    def double_taper(name, b, S, TR, le_sweep, section:Union[str, List[str]], kink_loc = 12*25.4+100, gap=60):
         if isinstance(section, str):
             section = [section for _ in range(4)]
             #"fx63137-il"
@@ -96,16 +96,16 @@ class Wing:
             ),
             Panel(
                 f"{name}_outer", 
-                ac_to_p.offset(PY(a)),
+                ac_to_p.offset(PY(gap + a)),
                 [
                     Rib.create(section[2],cr,P0(), 2),
-                    Rib.create(section[3],ct,Point(le_sweep, b/2 - a, 0), 2),
+                    Rib.create(section[3],ct,Point(le_sweep, b/2 - a - gap, 0), 2),
                 ]
             )
         ])
 
-    def transform(self, transform: Transformation):
-        pass
+    def apply_transformation(self, transform: Transformation):
+        return Wing([p.apply_transformation(transform) for p in self.panels], self.symm)
 
 
     # extend to centre
