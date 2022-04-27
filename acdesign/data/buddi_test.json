@@ -9,45 +9,45 @@
         "y": 0.0,
         "z": 0.0
       },
-      "dihedral": -7.016709298534876e-15,
+      "dihedral": -0.0,
       "incidence": 0.0,
-      "length": 500.0,
+      "length": 400.0,
       "sweep": 0.0,
       "inbd": {
         "airfoil": "clarkysm-il",
-        "chord": 333.3333333333333,
+        "chord": 328.947,
         "te_thickness": 2.0,
-        "incidence": 0.0
+        "incidence": 2.766
       },
       "otbd": {
         "airfoil": "clarkysm-il",
-        "chord": 333.3333333333333,
+        "chord": 328.947,
         "te_thickness": 2.0,
-        "incidence": 0.0
+        "incidence": 2.766
       }
     },
     {
       "name": "wing_outer",
       "acpos": {
         "x": -300.0,
-        "y": 560.0,
+        "y": 460.0,
         "z": 0.0
       },
-      "dihedral": -7.016709298534876e-15,
+      "dihedral": -0.0,
       "incidence": 0.0,
-      "length": 1190.0,
+      "length": 1340.0,
       "sweep": 100.0,
       "inbd": {
         "airfoil": "clarkysm-il",
-        "chord": 333.3333333333333,
+        "chord": 328.947,
         "te_thickness": 2.0,
-        "incidence": 0.0
+        "incidence": 2.766
       },
       "otbd": {
         "airfoil": "sa7038-il",
-        "chord": 199.99999999999997,
+        "chord": 197.368,
         "te_thickness": 2.0,
-        "incidence": 0.0
+        "incidence": 2.766
       }
     },
     {
@@ -57,19 +57,19 @@
         "y": 0.0,
         "z": 55.0
       },
-      "dihedral": -7.016709298534876e-15,
+      "dihedral": -0.0,
       "incidence": 0.0,
-      "length": 437.5,
-      "sweep": 20.0,
+      "length": 447.214,
+      "sweep": 50.0,
       "inbd": {
         "airfoil": "s9032-il",
-        "chord": 5.023547880690738e-07,
+        "chord": 248.452,
         "te_thickness": 2.0,
         "incidence": 0.0
       },
       "otbd": {
         "airfoil": "s9032-il",
-        "chord": 1.5070643642072213e-07,
+        "chord": 198.762,
         "te_thickness": 2.0,
         "incidence": 0.0
       }
@@ -81,19 +81,19 @@
         "y": 0.0,
         "z": 55.0
       },
-      "dihedral": 89.99999999999999,
+      "dihedral": 90.0,
       "incidence": 0.0,
-      "length": 175.0,
-      "sweep": 30.0,
+      "length": 447.214,
+      "sweep": 50.0,
       "inbd": {
         "airfoil": "s9032-il",
-        "chord": 1.5460729746444033e-06,
+        "chord": 248.452,
         "te_thickness": 2.0,
         "incidence": 0.0
       },
       "otbd": {
         "airfoil": "s9032-il",
-        "chord": 4.947433518862091e-07,
+        "chord": 198.762,
         "te_thickness": 2.0,
         "incidence": 0.0
       }

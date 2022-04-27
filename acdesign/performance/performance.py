@@ -108,7 +108,7 @@ def hard_limit(var, lim):
 def cost(perf: Performance):
     return sum([
         2000000 / perf.range,
-        50000 / perf.endurance, 
+        100000 / perf.endurance, 
         hard_limit(perf.cruise_stall_speed+2, perf.op.V),
         hard_limit(perf.stall_speed, 15),
         hard_limit(perf.mass, 16)
@@ -154,7 +154,7 @@ if __name__ == '__main__':
             "stall speed (m/s)",
             "CD",
             "CL",
-            "cruis stall speed (m/s)"
+            "cruise stall speed (m/s)"
         )
     ).update_layout(margin=dict(l=20, r=20, t=40, b=40))
 

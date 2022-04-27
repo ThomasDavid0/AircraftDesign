@@ -31,15 +31,16 @@ class ComponentMass:
         m: float,
         geom: dict 
     ):
-        match geom.pop("shape"):
-            case "cuboid":
-                mass = Mass.cuboid(m, **geom)
-            case "sphere":
-                mass = Mass.sphere(m, **geom)
-            case "point":
-                mass = Mass.point(m)
-            case _:
-                raise ValueError("unknown mass shape")
+
+        shape = geom.pop("shape")
+        if shape == "cuboid":
+            mass = Mass.cuboid(m, **geom)
+        elif shape == "sphere":
+            mass = Mass.sphere(m, **geom)
+        elif shape == "point":
+            mass = Mass.point(m)
+        else:
+            raise ValueError("unknown mass shape")
         
         return ComponentMass(name, Point(**cg), mass)
 

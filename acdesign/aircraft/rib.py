@@ -38,7 +38,7 @@ class Rib(Airfoil):
             airfoil = self.name,
             chord = self.chord,
             te_thickness = self.te_thickness,
-            incidence= self.incidence
+            incidence= np.degrees(self.incidence)
         )
 
     def rename(self, name):

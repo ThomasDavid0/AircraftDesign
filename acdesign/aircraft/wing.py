@@ -58,7 +58,7 @@ class Wing:
     @staticmethod
     def straight_taper(name, b, S, TR, le_sweep, section:Union[str, List[str]], dihedral=0, symm=True ):
         smc = S / b
-        cr = 2 * smc / (b*(1+TR))
+        cr = 2 * smc / (1+TR)
         ct = TR * cr
 
         return Wing([Panel(
@@ -68,16 +68,22 @@ class Wing:
                 Rib.create(section[0], cr, P0(), 2),
                 Rib.create(section[1], ct, Point(le_sweep, b/2, 0), 2)
             ]
-        )])
+        )], symm)
 
 
     @staticmethod
-    def double_taper(name, b, S, TR, le_sweep, section:Union[str, List[str]], kink_loc = 12*25.4+100, gap=60):
+    def double_taper(
+        name, b, S, TR, le_sweep, 
+        section:Union[str, List[str]], 
+        incidence: Union[float, List[float]]=0,
+        kink_loc = 12*25.4+100, gap=60
+    ):
         if isinstance(section, str):
             section = [section for _ in range(4)]
             #"fx63137-il"
             #mh32-il
-
+        if isinstance(incidence, float):
+            incidence = [incidence for _ in range(4)]
         
         a = kink_loc
         cr = 0.5*S / (a + (1 + TR) * (b/4 - a / 2))
@@ -90,16 +96,16 @@ class Wing:
                 f"{name}_centre", 
                 ac_to_p,
                 [
-                    Rib.create(section[0],cr,P0(), 2),
-                    Rib.create(section[1],cr,PY(a), 2)
+                    Rib.create(section[0],cr,P0(), 2, incidence[0]),
+                    Rib.create(section[1],cr,PY(a), 2, incidence[1])
                 ]
             ),
             Panel(
                 f"{name}_outer", 
                 ac_to_p.offset(PY(gap + a)),
                 [
-                    Rib.create(section[2],cr,P0(), 2),
-                    Rib.create(section[3],ct,Point(le_sweep, b/2 - a - gap, 0), 2),
+                    Rib.create(section[2],cr,P0(), 2, incidence[2]),
+                    Rib.create(section[3],ct,Point(le_sweep, b/2 - a - gap, 0), 2, incidence[3]),
                 ]
             )
         ])
