@@ -1,4 +1,4 @@
-from geometry import Point, Transformation
+from geometry import Point, Transformation, Q0
 
 
 
@@ -8,8 +8,8 @@ class Body:
         self.transform = transform
 
     @staticmethod
-    def create(name):
-        return Body(name, Transformation())
+    def create(name, acpos):
+        return Body(name, Transformation(Point(**acpos), Q0()))
 
     def dumpd(self):
         return dict(
