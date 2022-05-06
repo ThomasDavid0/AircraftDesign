@@ -38,6 +38,15 @@ class Wing:
         raise AttributeError(f"Attribute {name} not found")
 
     @staticmethod
+    def from_panels(panels):
+        b = 0
+        _ps=[]
+        for p in panels:
+            _ps.append(p.offset(PY(b)))
+            b += p.semispan
+        return Wing(_ps)
+
+    @staticmethod
     def from_ribs(ribs: List[Rib], symm=True):
         panels = []
         for i, (r1, r2) in enumerate(zip(ribs[:-1], ribs[1:])):
@@ -110,8 +119,24 @@ class Wing:
             )
         ])
 
+    def extend_inboard(self):
+        if self.panels[0].root.transform.y == 0:
+            return self
+        else:
+            return Wing(
+                [Panel.square(
+                    f"{self.panels[0].name}_fus",
+                    self.panels[0].root.transform.y,
+                    self.panels[0].root.offset(-PY(self.panels[0].root.transform.y)) 
+                )] + self.panels,
+                self.symm
+            )
+
     def apply_transformation(self, transform: Transformation):
         return Wing([p.apply_transformation(transform) for p in self.panels], self.symm)
+
+    def offset(self, trans: Point):
+        return Wing([p.offset(trans) for p in self.panels], self.symm)
 
 
     # extend to centre

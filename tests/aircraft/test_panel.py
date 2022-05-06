@@ -67,4 +67,7 @@ def test_props():
     assert p.pMAC.x == p.le_sweep_distance * p.pMAC.y / p.semispan
 
     
+def test_simple():
+    panel = Panel.simple("test", 1000, 100, Rib.simple("rae101-il", 100, 5), Rib.simple("rae101-il", 50, 5))
 
+    assert panel.area == 1000 * 75

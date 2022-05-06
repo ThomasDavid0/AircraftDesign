@@ -46,9 +46,9 @@ def test_MAC():
     wing = Wing.from_ribs(ribs)
     assert wing.MAC == approx(161.243301178992)
 
-def test_pMAC():
+def test_pMAC(ribs):
     wing = Wing.from_ribs(ribs)
-    assert wing.pMAC.y == approx(234.016613076)
+    assert wing.pMAC.y[0] == approx(234.016613076)
 
 
 
@@ -76,3 +76,10 @@ def test_double_taper(buddi):
     assert buddi.panels[0].root.chord == approx(286.9760155574762)
 
     #assert buddi.pMAC.x == buddi.pMAC.y * o.le_sweep_distance / (buddi.b * 0.5)
+
+
+def test_from_panels():
+    p1 = Panel.simple("test", 500, 100, Rib.simple("rae101-il", 100, 5), Rib.simple("rae101-il", 50, 5))
+    p2 = Panel.simple("test", 500, 100, Rib.simple("rae101-il", 50, 5), Rib.simple("rae101-il", 50, 5))
+    w = Wing.from_panels([p1, p2])
+    assert w.b == 2000

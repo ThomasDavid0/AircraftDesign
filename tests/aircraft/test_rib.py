@@ -25,3 +25,6 @@ def test_create_rib(rib):
     assert rib.te_thickness == _rib["te_thickness"]
     assert rib.transform.rotation.to_euler().z == np.radians(_rib["incidence"])
 
+def test_simple():
+    rib = Rib.simple("rae101-il", 200, 5)
+    assert rib.chord == 200

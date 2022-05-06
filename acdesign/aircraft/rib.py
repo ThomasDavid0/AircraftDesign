@@ -19,6 +19,15 @@ class Rib(Airfoil):
         if name in self.transform.cols:
             return getattr(self.transform, name)
         
+    @staticmethod
+    def simple(airfoil: str, chord: float, te_thickness: float):
+        return Rib(
+            Transformation.build(P0(),Euler(np.pi/2, 0, 0)),
+            airfoil,
+            Airfoil.download(airfoil.split("_")[-1])
+            .set_chord(chord)
+            .set_te_thickness(te_thickness).points
+        )
 
     @staticmethod
     def create(airfoil, chord, panelpos: Point=P0(), te_thickness=0, incidence=0):

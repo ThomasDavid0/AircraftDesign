@@ -47,3 +47,5 @@ def test_panel_dump_avl(_panel):
     assert lines[6] == "400.000 600.000 100.000 300.000 4.000"
 
 
+def test_parse_dump():
+    pass

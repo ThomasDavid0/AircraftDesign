@@ -1,4 +1,4 @@
-from geometry import Point, Transformation, Euler, PX, PY
+from geometry import Point, Transformation, Euler, PX, PY, P0, Q0
 from typing import List
 from .rib import Rib
 from typing import Dict, List
@@ -85,6 +85,24 @@ class Panel:
         )
 
     @staticmethod
+    def simple(name: str, length: float, sweep: str, root: Rib, tip: Rib, dihedral=0):
+        return Panel(
+            name,
+            Transformation.build(
+                P0(),
+                Euler(np.radians(dihedral) + np.pi, 0, np.pi)
+            ),
+            [
+                root,
+                tip.offset(Point(sweep, length, 0)),
+            ]
+        )
+
+    @staticmethod
+    def square(name:str, length:float, rib: Rib):
+        return Panel.simple(name, length, 0, rib, rib)
+
+    @staticmethod
     def create(name, acpos, dihedral, incidence, inbd, otbd, sweep, length):
         return Panel(
             name,
@@ -120,3 +138,6 @@ class Panel:
             ),
             self.ribs
         )
+
+    def offset(self, trans: Point):
+        return self.apply_transformation(Transformation(trans, Q0()))
