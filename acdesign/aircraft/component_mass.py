@@ -12,7 +12,6 @@ class ComponentMass:
         self.cg = cg
         self.mass = mass
 
-
     @staticmethod
     def combine(components: list):
         cgs = Point.concatenate([c.cg for c in components]) 

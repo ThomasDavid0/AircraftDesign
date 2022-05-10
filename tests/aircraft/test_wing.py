@@ -42,7 +42,7 @@ def test_mean_chord(ribs):
 
 
 # TODO need an independent check of these
-def test_MAC():
+def test_MAC(ribs):
     wing = Wing.from_ribs(ribs)
     assert wing.MAC == approx(161.243301178992)
 
@@ -55,7 +55,7 @@ def test_pMAC(ribs):
 
 @fixture
 def buddi():
-    return Wing.double_taper("wing", 3500, 0.85*1e6, 0.6, 100, ["fx63137-il","fx63137-il","mh32-il","mh32-il"])
+    return Wing.double_taper("wing", 3500, 0.85*1e6, 0.6, 100, ["fx63137-il","fx63137-il","mh32-il","mh32-il"], [0,0,0,0], gap=0)
 
 
 def test_double_taper(buddi):

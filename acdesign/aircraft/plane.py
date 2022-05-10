@@ -5,7 +5,7 @@ from .body import Body
 from .component_mass import ComponentMass
 from .wing import Wing
 import numpy as np
-from json import load
+from json import load, dump, loads, dumps
 
 
 
@@ -37,6 +37,21 @@ class Plane:
             bodies=[b.dumpd() for b in self.bodies], 
             masses=[m.dumpd() for m in self.masses],
         )
+
+    def dump_json(self, file):
+        def np_encoder(object):
+            if isinstance(object, np.generic):
+                return object.item()
+        with open(file, 'w') as f:
+            #this is a nice bodge from stack overflow to format floats in json dump
+            dump(
+                loads(
+                    dumps(self.dumpd(), default=np_encoder), 
+                    parse_float=lambda x: round(float(x), 3)
+                ),
+                f, indent=2
+            )
+
 
     @property
     def sref(self) -> float:
