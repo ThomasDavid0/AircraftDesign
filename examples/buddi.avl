@@ -8,7 +8,7 @@ Buddi
 1 0 0.000
 
 !Sref !Cref !Bref
-0.484 0.329 3.600
+0.636 0.329 3.600
 
 !Xref !Yref !Zref
 400.000 0.000 0.000
@@ -33,6 +33,27 @@ SECTION
 
 !Xle !Yle !Zle !Chord !Ainc
 0.300 0.400 -0.000 0.329 2.766
+
+! keyword
+SURFACE
+
+!name
+wing_centre_wing_outer
+
+!Nchord !Cspace !Nspan !Sspace
+1 1.000 16 -2.000
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+0.300 0.400 0.000 0.329 2.766
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+0.300 0.860 -0.000 0.329 2.766
 
 ! keyword
 SURFACE

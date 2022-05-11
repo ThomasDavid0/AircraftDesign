@@ -1,7 +1,7 @@
 from re import T
 from acdesign.aircraft import Panel, Rib
 from typing import List, Union
-from geometry import Point, P0, Transformation, Euler, PY
+from geometry import Point, P0, Transformation, Euler, PY, Q0
 import numpy as np
 
 
@@ -124,8 +124,20 @@ class Wing:
 
 
     def fill_gaps(self):
+        new_panels = []
         for pi, po in zip(self.panels[:-1], self.panels[1:]):
-            pass
+            new_panels.append(pi)
+            if abs(pi.transform.apply(pi.tip.transform) - po.transform.apply(po.root.transform))[0] > 0.1:
+                new_panels.append(Panel(
+                    f"{pi.name}_{po.name}",
+                    Transformation.build(Point(pi.le_sweep_distance, pi.semispan, 0), Q0()).apply(pi.transform),
+                    [
+                        pi.tip.offset(-pi.tip.transform.p),
+                        po.root.offset(Point(pi.x-po.x, po.y-pi.y, pi.z-po.z))
+                    ]
+                ))
+            new_panels.append(po)
+        return Wing(new_panels, self.symm)
 
     def extend_inboard(self):
         if self.panels[0].root.transform.y == 0:

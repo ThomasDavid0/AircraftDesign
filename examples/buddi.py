@@ -19,7 +19,7 @@ buddi = ConventionalPlane(
         section=["clarkysm-il","clarkysm-il","clarkysm-il","sa7038-il"], 
         incidence=pols.alpha.item(),
         kink_loc=400, gap=60
-    ).apply_transformation(Transformation(PX(-300), Q0())),
+    ).apply_transformation(Transformation(PX(-300), Q0())).fill_gaps(),
 
     Wing.straight_taper(
         "tail", np.sqrt(2e5  * 4), 2e5, 0.8, 50,
