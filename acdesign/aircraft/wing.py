@@ -133,7 +133,7 @@ class Wing:
                     Transformation.build(Point(pi.le_sweep_distance, pi.semispan, 0), Q0()).apply(pi.transform),
                     [
                         pi.tip.offset(-pi.tip.transform.p),
-                        po.root.offset(Point(pi.x-po.x, po.y-pi.y, pi.z-po.z))
+                        po.root.offset(Point((pi.x-pi.tip.x)-po.x , po.y-(pi.y + pi.tip.y), (pi.z - pi.tip.z)-po.z))
                     ]
                 ))
             new_panels.append(po)
