@@ -58,6 +58,12 @@ class Rib(Airfoil):
             Transformation.build(self.transform.translation + pos, self.transform.rotation),
             self.name, self.points
         )
+    
+    def apply_transformation(self, trans: Transformation):
+        return Rib(
+            trans.apply(self.transform),
+            self.name, self.points
+        )
 
     @property
     def incidence(self):

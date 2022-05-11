@@ -20,3 +20,10 @@ class Body:
             name=self.name,
             acpos=self.transform.translation.to_dict()
         )
+
+    def scale(self, fac):
+        return Body(
+            self.name, 
+            Transformation(self.transform.translation * fac, self.transform.rotation)
+        )
+        

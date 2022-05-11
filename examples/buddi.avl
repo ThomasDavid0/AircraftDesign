@@ -1,0 +1,99 @@
+!name
+Buddi
+
+!Mach
+0.000
+
+!iYsym !iZsym !Zsym
+1 0 0.000
+
+!Sref !Cref !Bref
+0.484 0.329 3.600
+
+!Xref !Yref !Zref
+400.000 0.000 0.000
+
+! keyword
+SURFACE
+
+!name
+wing_centre
+
+!Nchord !Cspace !Nspan !Sspace
+1 1.000 16 -2.000
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+0.300 0.000 0.000 0.329 2.766
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+0.300 0.400 -0.000 0.329 2.766
+
+! keyword
+SURFACE
+
+!name
+wing_outer
+
+!Nchord !Cspace !Nspan !Sspace
+1 1.000 16 -2.000
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+0.300 0.460 0.000 0.329 2.766
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+0.400 1.800 -0.000 0.197 2.766
+
+! keyword
+SURFACE
+
+!name
+tail
+
+!Nchord !Cspace !Nspan !Sspace
+1 1.000 16 -2.000
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+1.400 0.000 -0.055 0.248 0.000
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+1.450 0.447 -0.055 0.199 0.000
+
+! keyword
+SURFACE
+
+!name
+fin
+
+!Nchord !Cspace !Nspan !Sspace
+1 1.000 16 -2.000
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+1.400 0.000 -0.055 0.248 0.000
+
+! keyword
+SECTION
+
+!Xle !Yle !Zle !Chord !Ainc
+1.450 0.000 0.392 0.199 0.000
+

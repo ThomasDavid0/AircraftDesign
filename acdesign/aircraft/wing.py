@@ -37,6 +37,9 @@ class Wing:
             return getattr(self.props, name)
         raise AttributeError(f"Attribute {name} not found")
 
+    def scale(self, fac):
+        return Wing([p.scale(fac) for p in self.panels], self.symm)
+
     @staticmethod
     def from_panels(panels):
         b = 0
@@ -118,6 +121,11 @@ class Wing:
                 ]
             )
         ])
+
+
+    def fill_gaps(self):
+        for pi, po in zip(self.panels[:-1], self.panels[1:]):
+            pass
 
     def extend_inboard(self):
         if self.panels[0].root.transform.y == 0:

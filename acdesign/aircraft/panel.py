@@ -8,7 +8,7 @@ import numpy as np
 
 class PanelProps:
     def __init__(self, p):
-        self.ymax = p.otbd.y + p.y
+        self.ymax = p.otbd.y[0] + p.y[0]
         self.semispan = p.otbd.y[0] - p.inbd.y[0]
         self.SMC = (p.inbd.chord + p.otbd.chord) / 2
         self.area =  self.SMC * self.semispan           
@@ -80,7 +80,7 @@ class Panel:
     def scale(self, fac: float):
         return Panel(
             self.name, 
-            Transformation(self.transform.translation * 2, self.transform.rotation),
+            Transformation(self.transform.translation * fac, self.transform.rotation),
             [r.scale(fac) for r in self.ribs]
         )
 

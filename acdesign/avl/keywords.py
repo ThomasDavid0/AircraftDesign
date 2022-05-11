@@ -3,7 +3,7 @@ from geometry import Point
 from typing import List, Tuple, Union, NamedTuple
 from acdesign.aircraft import Panel, Rib, Plane
 from collections import namedtuple
-import itertools
+from itertools import chain
 from enum import Enum
 
 kwfile = "acdesign/avl/kwords.txt"
@@ -98,21 +98,30 @@ class KeyWord:
         data = [line.split() for line in data]
         return self.NTuple(**{p.name: p.collect(data) for p in self.parms})
 
-    def dump(self, data: NamedTuple) -> List[str]:
+    def dump(self, data: NamedTuple, add_comments=False) -> List[str]:
         
         out = [[self.word]]
+        coms = [["!", "keyword"]]
         for parm in self.parms:
             if not getattr(data, parm.name) is None:
                 while parm.row + 1 > len(out):
                     out.append([])
+                    coms.append([])
                 while parm.col + 1 > len(out[parm.row]):
                     out[parm.row].append(None)
+                    coms[parm.row].append(f"!{parm.name}")
 
                 out[parm.row][parm.col] = parm.dump(data)
+                
             else:
                 if not parm.optional:
                     raise ValueError(f"None given for required parameter {parm.name}")
-        return [" ".join(o) for o in out]
+        comments = [" ".join(c) for c in coms]
+        data = [" ".join(o) for o in out]
+        if add_comments:
+            return  list(chain(*[[c, d] for c, d in zip(comments, data)]))
+        else:
+            return [" ".join(o) for o in out]
 
 kwlist = [KeyWord(*_parse_kwfdata(kwfd)) for kwfd in _read_kwordfile(kwfile)]
 kwdict = {kw.word: kw for kw in kwlist}

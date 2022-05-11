@@ -38,5 +38,14 @@ buddi = ConventionalPlane(
 
 )
 
-buddi.dump_json("acdesign/data/buddi_test2.json")
+#buddi.dump_json("acdesign/data/buddi_test2.json")
+from acdesign.avl.dump import plane_dump_avl
+
+balt = True
+with open("examples/buddi.avl", "w") as f:
+    for line in plane_dump_avl(buddi.scale(1/1000), True):
+        balt=not balt
+        f.write(f"{line}\n")
+        if balt:
+            f.write("\n")
 

@@ -59,12 +59,19 @@ class Plane:
 
     @property
     def cref(self) -> float:
-        return max([p.mean_chord for p in self.panels])
+        return max([p.SMC for p in self.panels])
 
     @property
     def bref(self) -> float:
         return max([p.ymax for p in self.panels]) * 2
 
+    def scale(self, fac: float):
+        return Plane(
+            self.name, 
+            [p.scale(fac) for p in self.panels],
+            [b.scale(fac) for b in self.bodies],
+            self.masses,
+        )
 
 class ConventionalPlane(Plane):
     def __init__(self, name, wing, tail, fin, bodies, masses):
@@ -94,4 +101,12 @@ class ConventionalPlane(Plane):
             plane.bodies, plane.masses
         )
 
-    
+    def scale(self, fac):
+        return ConventionalPlane(
+            self.name,
+            self.wing.scale(fac),
+            self.tail.scale(fac),
+            self.fin.scale(fac),
+            [b.scale(fac) for b in self.bodies],
+            self.masses,
+        )
