@@ -14,9 +14,19 @@ class Airfoil:
     def parse_selig(file):      
                 
         with open(file) as f:
-            lines = f.readlines()
-        
-        data = np.array([l.strip().split()  for l in lines[1:]]).astype(float)
+            lines = [l.strip()  for l in f.readlines()[1:]]
+
+        if lines[1] == "":
+            npoints = np.array([float(v) for v in lines[0].split()]).astype("int")
+
+            lines = lines[2:]
+            
+            d1 = lines[:npoints[0]]            
+            d2 = lines[npoints[1]+1:]
+
+            lines = list(reversed(d1)) + d2
+
+        data = np.array([l.split()  for l in lines]).astype(float)
 
         return Airfoil(
             lines[0].strip(), 
@@ -28,7 +38,10 @@ class Airfoil:
     @staticmethod
     def download(airfoiltoolsname):
         #https://m-selig.ae.illinois.edu/ads/coord_updates/la5055.dat
-        _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)            
+        if airfoiltoolsname[-3:] == "-il":
+            _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)            
+        else:
+            _file = urllib.request.urlretrieve(f"https://m-selig.ae.illinois.edu/ads/coord/{airfoiltoolsname}.dat")
         return Airfoil.parse_selig(_file[0])
 
     @property

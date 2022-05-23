@@ -9,10 +9,17 @@ from geometry import Point
 def affile():
     return "tests/data/seligdatfile.txt"
 
+@pytest.fixture
+def affile2():
+    return "tests/data/goe222.dat"
 
 def test_parse_selig(affile):
     af = Airfoil.parse_selig(affile)
 
+    assert isinstance(af.points, Point)
+
+def test_parse_the_otherone(affile2):
+    af = Airfoil.parse_selig(affile2)
     assert isinstance(af.points, Point)
 
 
@@ -20,6 +27,11 @@ def test_download():
     af = Airfoil.download("b29root-il")
     assert isinstance(af.points, Point)
     assert len(af.points) == 39
+
+def test_downloaduiuc():
+    af = Airfoil.download("clarkv")
+    assert isinstance(af.points, Point)
+    assert len(af.points) == 34
 
 
 @pytest.fixture
