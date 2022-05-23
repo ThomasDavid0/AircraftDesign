@@ -39,9 +39,11 @@ class Airfoil:
     def download(airfoiltoolsname):
         #https://m-selig.ae.illinois.edu/ads/coord_updates/la5055.dat
         if airfoiltoolsname[-3:] == "-il":
-            _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)            
-        else:
-            _file = urllib.request.urlretrieve(f"https://m-selig.ae.illinois.edu/ads/coord/{airfoiltoolsname}.dat")
+            airfoiltoolsname = airfoiltoolsname[:-3]
+#            _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)            
+
+ #       else:
+        _file = urllib.request.urlretrieve(f"https://m-selig.ae.illinois.edu/ads/coord/{airfoiltoolsname}.dat")
         return Airfoil.parse_selig(_file[0])
 
     @property
