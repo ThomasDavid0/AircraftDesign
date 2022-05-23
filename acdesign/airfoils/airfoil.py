@@ -14,7 +14,9 @@ class Airfoil:
     def parse_selig(file):      
                 
         with open(file) as f:
-            lines = [l.strip()  for l in f.readlines()[1:]]
+            lines = [l.strip()  for l in f.readlines()]
+        name = lines[0]
+        lines = lines[1:]
 
         if lines[1] == "":
             npoints = np.array([float(v) for v in lines[0].split()]).astype("int")
@@ -22,14 +24,15 @@ class Airfoil:
             lines = lines[2:]
             
             d1 = lines[:npoints[0]]            
-            d2 = lines[npoints[1]+1:]
-
+            d2 = lines[npoints[0]+1:]
+            if d1[0] == d2[0]:
+                d1 = d1[1:]
             lines = list(reversed(d1)) + d2
 
         data = np.array([l.split()  for l in lines]).astype(float)
 
         return Airfoil(
-            lines[0].strip(), 
+            name, 
             Point(
                 np.append(data, np.zeros((len(data), 1)), axis=1) 
             )

@@ -31,7 +31,7 @@ def test_download():
 def test_downloaduiuc():
     af = Airfoil.download("clarkv")
     assert isinstance(af.points, Point)
-    assert len(af.points) == 34
+    assert len(af.points) == 33
 
 
 @pytest.fixture
