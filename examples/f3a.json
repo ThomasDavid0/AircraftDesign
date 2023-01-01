@@ -1,0 +1,126 @@
+{
+    "version": 0.01,
+    "name": "f3APlane",
+    "panels": [
+      {
+        "name": "wing",
+        "acpos": {
+          "x": -382,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "dihedral": 0.0,
+        "incidence": 0.0,
+        "length": 950.0,
+        "sweep": 315.0,
+        "inbd": {
+          "airfoil": "rae101-il",
+          "chord": 480,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        },
+        "otbd": {
+          "airfoil": "e168-il",
+          "chord": 165,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        }
+      },
+      {
+        "name": "tail",
+        "acpos": {
+          "x": -1620.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "dihedral": -0.0,
+        "incidence": 0.0,
+        "length": 440,
+        "sweep": 170.0,
+        "inbd": {
+          "airfoil": "s9032-il",
+          "chord": 300,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        },
+        "otbd": {
+          "airfoil": "s9032-il",
+          "chord": 130,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        }
+      },
+      {
+        "name": "fin_top",
+        "acpos": {
+          "x": -1330.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "dihedral": 90.0,
+        "incidence": 0.0,
+        "length": 370,
+        "sweep": 430.0,
+        "inbd": {
+          "airfoil": "s9032-il",
+          "chord": 636,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        },
+        "otbd": {
+          "airfoil": "s9032-il",
+          "chord": 200,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        }
+      },
+      {
+        "name": "fin_btm",
+        "acpos": {
+          "x": -1330.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "dihedral": -90.0,
+        "incidence": 0.0,
+        "length": 200,
+        "sweep": 380,
+        "inbd": {
+          "airfoil": "s9032-il",
+          "chord": 636,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        },
+        "otbd": {
+          "airfoil": "s9032-il",
+          "chord": 260,
+          "te_thickness": 4.0,
+          "incidence": 0.0
+        }
+      }
+    ],
+    "bodies": [
+      {
+        "name": "body",
+        "acpos": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    ],
+    "masses": [
+      {
+        "name": "total",
+        "cg": {
+          "x": 400,
+          "y": 0,
+          "z": 0
+        },
+        "m": 16.0,
+        "geom": {
+          "shape": "point"
+        }
+      }
+    ]
+  }

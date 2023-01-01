@@ -17,7 +17,7 @@ class Plane:
         self.panels = panels
         self.bodies = bodies
         self.masses = masses
-        self.mass = ComponentMass.combine(masses)
+        self.mass = None#ComponentMass.combine(masses)
 
     @staticmethod
     def create(name, panels, bodies=[], masses=[], version=0.01):

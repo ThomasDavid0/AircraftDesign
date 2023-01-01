@@ -1,9 +1,7 @@
 from os import name
-from geometry import Point, Transformation, Mass
+from geometry import Point, Transformation, Mass, P0
 import numpy as np
 from typing import List, Dict
-
-
 
 
 class ComponentMass:
@@ -12,12 +10,15 @@ class ComponentMass:
         self.cg = cg
         self.mass = mass
 
+
     @staticmethod
     def combine(components: list):
+        if len(components) == 0:
+            return ComponentMass("Total", P0, Mass.point(0.0))
         cgs = Point.concatenate([c.cg for c in components]) 
         ms = np.array([c.mass.m[0] for c in components])
         
-        cg = np.sum(cgs * ms) / np.sum(ms) 
+        cg = Point(np.sum((cgs * ms).data, axis=0) ) / np.sum(ms) 
 
         total = sum(c.mass.offset(c.cg - cg) for c in components)
         
