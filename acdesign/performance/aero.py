@@ -6,6 +6,7 @@ from acdesign.airfoils.polar import UIUCPolars
 from typing import Dict, List
 from scipy.optimize import minimize
 from collections import namedtuple
+from acdesign.aircraft import Wing
 
 
 
@@ -23,6 +24,7 @@ class FuseAero:
             S=self.swet, 
             c=self.length,
             Cl=0,
+            Cd0=0.455/(np.log10(re)**2.58),
             Cd=0.455/(np.log10(re)**2.58),
             Cm=0,
             re=re
@@ -69,17 +71,20 @@ class WingAero:
         res = pd.concat([
             p.iloc[s[0]:s[1]] for s, p in zip(sst, polars)
         ]).mean()
-
-
+        eh = e_howe(op.V / 330, 0.65, np.radians(5), 1, 0.18, self.AR)
+        k=1/(eh*np.pi*self.AR)
 
         return dict(
             S=self.S, 
             c=self.smc,
             Cl=res.Cl,
-            Cd=res.Cd + res.Cl**2 / (np.pi * self.AR),
+            Cd0=res.Cd,
+            k=k,
+            Cd=res.Cd + k * res.Cl**2,
             Cm=res.Cm,
             re=re
         )
+    
 
 
 def e_howe(M, lam, sw, Ne, toc, A):
@@ -99,6 +104,8 @@ def e_howe(M, lam, sw, Ne, toc, A):
     _b = (0.142 + f(lam) * A * (10 * toc)*0.33) / np.cos(sw)*2
     _c = 0.1 * (3 * Ne + 1) / (4+A)**0.8
     return 1 / (_a * (1 + _b + _c))
+
+
 
 
 class AircraftAero:
@@ -142,6 +149,7 @@ class AircraftAero:
         return df.assign(
             gCl = df.Cl * df.S / self.wing.S, 
             gCd = df.Cd * df.S / self.wing.S,
+            gCd0 = df.Cd0 * df.S / self.wing.S,
         )
         
     def trim(self, op: OperatingPoint, mass: float):
@@ -161,6 +169,7 @@ class AircraftAero:
         return df.assign(
             gCl = df.Cl * df.S / self.wing.S, 
             gCd = df.Cd * df.S / self.wing.S,
+            gCd0 = df.Cd0 * df.S / self.wing.S,
         )
 
     @property

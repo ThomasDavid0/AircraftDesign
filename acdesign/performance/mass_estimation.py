@@ -1,9 +1,9 @@
 from .aero import AircraftAero
-from .motor import Propulsion
+from .propulsion import Battery
 
 
 
-def estimate_mass(aero: AircraftAero, batt: Propulsion):
+def estimate_mass(aero: AircraftAero, batt: Battery):
     masses = dict(
         axi_8118 = 3 * 540,
         speed_cont=3*100,

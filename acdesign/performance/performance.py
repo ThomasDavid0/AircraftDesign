@@ -6,62 +6,80 @@ import pandas as pd
 from acdesign.atmosphere import Atmosphere
 from scipy.optimize import minimize
 from acdesign.performance.aero import FuseAero, WingAero, AircraftAero
-from acdesign.performance.motor import Propulsion
+from acdesign.performance.propulsion import Battery, Propeller, Motor
 from acdesign.performance.operating_point import OperatingPoint
 from acdesign.performance.mass_estimation import estimate_mass
 from acdesign.airfoils.polar import UIUCPolars
+from dataclasses import dataclass
 
 clarky = UIUCPolars.local("CLARKYB")
 sa7038 = UIUCPolars.local("SA7038")
 e472 = UIUCPolars.local("E472")
 
+
+@dataclass
+class PerformanceResults:
+    op: OperatingPoint
+    wind: float
+    trim: pd.DataFrame
+    cl: float
+    cd: float
+    drag: float
+    preq: float
+    endurance: float
+    range: float
+    stall: bool
+    stall_speed: float
+    cruise_stall_speed: float
+
+
+@dataclass
 class Performance:
-    def __init__(self, op: OperatingPoint, aero: AircraftAero, mot: Propulsion, mass: float, wind:float):
-        self.op = op
-        self.aero = aero
-        self.mot = mot
-        self.mass = mass
-        self.wind = wind
+    aero: AircraftAero
+    mass: float
+    propeller: Propeller
+    motor: Motor
+    battery: Battery
+    
+    def calculate(self, op: OperatingPoint, wind: float, quick_trim = False):
+        # TODO include CG in trim
+        trim = self.aero.quick_trim(op, self.mass) if quick_trim else self.aero.trim(op, self.mass)
 
-        self.trim = self.aero.quick_trim(op, mass)
+        cl = np.sum(trim.gCl)
+        cd = np.sum(trim.gCd) 
         
-        self.CL = np.sum(self.trim.gCl)
-        self.CD = np.sum(self.trim.gCd)       
-        
-        self.D = self.op.Q * self.aero.S * self.CD
-        self.preq = self.D * self.op.V
-        self.endurance = self.mot.endurance(self.preq)
-        self.range = (self.op.V - self.wind) * self.endurance
-        self.stall = self.CL > self.aero.CLmax
-        self.stall_speed = np.sqrt(2*9.81*self.mass/(1.225 * self.aero.S * self.aero.CLmax))
-        self.cruise_stall_speed = np.sqrt(2*9.81*self.mass/(self.op.atm.rho * self.aero.S * self.aero.CLmax))
+        drag = op.Q * self.aero.S * cd
 
+        #rpm, torque = self.propeller.calculate(op.atm, op.V, drag)
+        #preq = self.motor.calculate(rpm, torque)
+
+        preq = self.motor.calculate(self.propeller.calculate(op.V * drag))
+
+        endurance = self.battery.endurance(preq)
+
+        range = (op.V - wind) * endurance
+        stall = cl > self.aero.CLmax
+
+        stall_speed = np.sqrt(2*9.81*self.mass/(1.225 * self.aero.S * self.aero.CLmax))
+        cruise_stall_speed = np.sqrt(2*9.81*self.mass/(op.atm.rho * self.aero.S * self.aero.CLmax))
         
-    @staticmethod
-    def build(atm, V, b, S, cells, capacity, wind):
-        op = OperatingPoint(atm, V)
-        aero = AircraftAero(
-            WingAero(
-                b, 
-                S, 
-                [clarky,sa7038],
-                [0, 1/3, 1]
-            ),
-            WingAero(
-                0.2*S,
-                np.sqrt(0.2*S/3.5),
-                [e472],
-                [0,1]
-            ),
-            FuseAero(
-                b/2.5,
-                0.125
-            ),
-            0.02,
-            b/3
+        return PerformanceResults(
+            op,wind,trim,cl,cd,drag,preq,endurance,
+            range,stall,stall_speed,cruise_stall_speed
         )
-        mot = Propulsion.lipo(cells, capacity)
-        return Performance(op,aero,mot,estimate_mass(aero, mot), wind)
+
+    @staticmethod
+    def run(atm, V, b, S, cells, capacity, wind):
+        aero = AircraftAero(
+            WingAero(b, S, [clarky,sa7038],[0, 1/3, 1]),
+            WingAero(0.2*S,np.sqrt(0.2*S/3.5),[e472],[0,1]),
+            FuseAero(b/2.5,0.125),
+            0.02, b/3
+        )
+        batt = Battery.lipo(cells, capacity)
+        return Performance(
+            aero, estimate_mass(aero, batt), Propeller.factor(0.2), Motor.factor(0.9), batt
+        ).calculate(OperatingPoint(atm, V),wind)
 
     @staticmethod
     def optimize(atm: Atmosphere, vars: dict, consts: dict, cost: callable, **kwargs):
@@ -75,31 +93,13 @@ class Performance:
 
         res = minimize(fn, [v for v in vars.values()], **kwargs)
 
-        res.perf = Performance.build(
+        res.perf = Performance.run(
                 atm,
                 **{key: res.x[i] for i, key in enumerate(vars.keys())},
                 **consts
             )
         return res
 
-    def dump(self):
-        return dict(
-            b=self.aero.wing.b,
-            S=self.aero.wing.S,
-            AR=self.aero.wing.b**2 / self.aero.wing.S,
-            CLMax=self.aero.CLmax,
-            mass=self.mass,
-            cells=self.mot.lipo_cells,
-            capacity=self.mot.Ah,
-            wind=self.wind,
-            V=self.op.V,
-            CL=self.CL,
-            CD=self.CD,
-            endurance=self.endurance / (60*60),
-            range=self.range / 1000,
-            stall_speed=self.stall_speed,
-            cruise_stall_speed=self.cruise_stall_speed
-        )
 
 def hard_limit(var, lim):
     return 50 * (var - lim)**2 if var > lim else 0

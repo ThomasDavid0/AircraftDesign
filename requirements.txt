@@ -1,5 +1,5 @@
 numpy
 pandas
 scipy
-geometry
-pytest
+pfc-geometry
+beautifulsoup4

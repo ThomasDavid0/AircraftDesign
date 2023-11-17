@@ -1,4 +1,4 @@
-from geometry import Point, Transformation
+from geometry import Point, Transformation, Mass
 from typing import List
 from .panel import Panel
 from .body import Body
@@ -17,7 +17,8 @@ class Plane:
         self.panels = panels
         self.bodies = bodies
         self.masses = masses
-        self.mass = None#ComponentMass.combine(masses)
+        [m.mass for m in masses]
+        self.mass = ComponentMass.combine(masses)
 
     @staticmethod
     def create(name, panels, bodies=[], masses=[], version=0.01):
@@ -74,7 +75,7 @@ class Plane:
         )
 
 class ConventionalPlane(Plane):
-    def __init__(self, name, wing, tail, fin, bodies, masses):
+    def __init__(self, name, wing: Wing, tail: Wing, fin: Wing, bodies: list[Body], masses: list[ComponentMass]):
         self.wing = wing
         self.tail = tail
         self.fin = fin

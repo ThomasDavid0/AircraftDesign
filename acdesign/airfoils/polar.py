@@ -7,6 +7,12 @@ from typing import Union
 import urllib.request
 from urllib.error import HTTPError
 from bs4 import BeautifulSoup
+from pkg_resources import resource_stream, resource_listdir
+
+all_resources = resource_listdir("acdesign", "data")
+
+def getresource(name: str):
+    return resource_stream('acdesign', f'data/{name}')
 
 
 class LFTDRGParser:
@@ -26,18 +32,18 @@ class LFTDRGParser:
 
     def read_next_re_table(self) -> pd.DataFrame:
         for line in self.f:
-            if "Average Reynolds #:" in line:
-                re = float(self.f.readline().strip())
+            if "Average Reynolds #:" in line.decode():
+                re = float(self.f.readline().decode().strip())
                 break
         else:
             return None                  
 
-        assert "Number of angles of attack:" in self.f.readline()
-        n = int(self.f.readline().strip())
+        assert "Number of angles of attack:" in self.f.readline().decode()
+        n = int(self.f.readline().decode().strip())
 
-        headings = [h.strip() for h in self.f.readline().strip().split('/')]
+        headings = [h.strip() for h in self.f.readline().decode().strip().split('/')]
         
-        rows = [self.f.readline().strip().split() for _ in range(n)]
+        rows = [self.f.readline().decode().strip().split() for _ in range(n)]
 
         if ">>>" in headings[-1]:
             headings = headings[:-1] + [f"scd{i}" for i in range(len(rows[0]) - 3)]
@@ -117,13 +123,19 @@ class UIUCPolars:
             drg = lftp.read_all()
         return UIUCPolars(lft, drg)
 
+    
+
     @staticmethod
     def download(airfoil_name: str):
         return UIUCPolars.from_files(*UIUCPolars._get_uiuc_files(airfoil_name))
 
     @staticmethod
     def local(airfoil_name: str):
-        return UIUCPolars.from_files(*[f"acdesign/data/uiuc/{airfoil_name}.{ld}" for ld in ["LFT", "DRG"]])
+        return UIUCPolars(
+            LFTDRGParser(getresource(f"uiuc/{airfoil_name}.LFT")).read_all(), 
+            LFTDRGParser(getresource(f"uiuc/{airfoil_name}.DRG")).read_all()
+        )
+#        return UIUCPolars.from_files(*[f"acdesign/data/uiuc/{airfoil_name}.{ld}" for ld in ["LFT", "DRG"]])
 
     @staticmethod
     def _get_uiuc_files(airfoil_name):
