@@ -56,28 +56,21 @@ class LFTDRGParser:
         return df.assign(pre_stall=arr)
 
 
-def interpgrid(x,y,z, method="linear"):
-    def _interp(tests):
-        res = griddata(
-            np.column_stack([x,y]), 
-            z.to_numpy(), 
-            tests,
-            method
-        )
-        nans = np.isnan(res)
-        if np.any(nans):
+from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
-            resnan = griddata(
-                np.column_stack([x,y]), 
-                z.to_numpy(), 
-                tests,
-                method="nearest",
-            )
-            res[nans] = resnan[nans]
-        return res
 
-    return _interp
+def linear_or_nearest(points, values):
+    linear = LinearNDInterpolator(points, values)
+    nearest = NearestNDInterpolator(points, values)
 
+    def inner(x):
+        lin = linear(x)
+        near = nearest(x)
+        warn = np.isnan(lin)
+        lin[warn] = near[warn]
+        return lin, warn
+
+    return inner
 
 class UIUCPolars:
     def __init__(self, lift: pd.DataFrame, drag: pd.DataFrame):
@@ -85,34 +78,49 @@ class UIUCPolars:
         self.drag = drag
 
         self.pslift = self.lift.loc[self.lift.pre_stall==1]
-    
-        self.alpha_to_cl = interpgrid(self.pslift.re, self.pslift.alpha, self.pslift.Cl)
+        self.pslift = self.pslift.assign(group=np.cumsum(self.pslift.re.diff() / self.pslift.re > 0.2))
+        self.pslift = pd.concat([
+            self.pslift.loc[self.pslift.group==0].assign(re=0),
+            self.pslift,
+            self.pslift.loc[self.pslift.group==self.pslift.group.unique()[-1]].assign(re=2000000),
+        ])
 
-        self.cl_to_alpha = interpgrid(self.pslift.re, self.pslift.Cl, self.pslift.alpha)
-        self.cl_to_cm = interpgrid(self.pslift.re, self.pslift.Cl, self.pslift.Cm)
-        self.cl_to_cd = interpgrid(self.drag.re, self.drag.Cl, self.drag.Cd)
+        self.pslift.assign(group=np.cumsum(self.pslift.re.diff() / self.pslift.re > 0.2))
+
+        self.alpha_to_cl = linear_or_nearest((self.pslift.re, self.pslift.alpha), self.pslift.Cl)
+        self.cl_to_alpha = linear_or_nearest((self.pslift.re, self.pslift.Cl), self.pslift.alpha)
+        self.cl_to_cm = linear_or_nearest((self.pslift.re, self.pslift.Cl), self.pslift.Cm)
+
+        self.cl_to_cd = linear_or_nearest((self.drag.re, self.drag.Cl), self.drag.Cd)
     
 
     def apply(self, recl: np.ndarray) -> pd.DataFrame:
+        alpha, stall = self.cl_to_alpha(recl)
+
         return pd.DataFrame(
             np.column_stack([
                 recl[:,0],
-                self.cl_to_alpha(recl),
+                alpha,
                 recl[:,1],
-                self.cl_to_cm(recl),
-                self.cl_to_cd(recl)
+                self.cl_to_cm(recl)[0],
+                self.cl_to_cd(recl)[0],
+                stall
             ]),
-            columns=["re", "alpha", "Cl", "Cm", "Cd"]
+            columns=["re", "alpha", "Cl", "Cm", "Cd", "stall"]
         )
 
     def lookup(self, re:Union[list, Number], cl:Union[list, Number]) -> pd.DataFrame:
         re = [re] if isinstance(re, Number) else re
         cl = [cl] if isinstance(cl, Number) else cl        
-        return self.apply(np.array([[r, c] for c in cl for r in re]))
+        return self.apply(np.column_stack([re, cl]))
 
     def alookup(self, re: Union[list, Number], alpha:Union[list, Number]) -> pd.DataFrame:
         return self.lookup(re, self.alpha_to_cl(re, alpha))
-        
+
+
+    
+
+
     @staticmethod
     def from_files(lft, drg):
         with open(lft, "r") as f:
@@ -123,7 +131,6 @@ class UIUCPolars:
             drg = lftp.read_all()
         return UIUCPolars(lft, drg)
 
-    
 
     @staticmethod
     def download(airfoil_name: str):
@@ -177,9 +184,12 @@ def list_url_files(url, extension):
 
 
 if __name__ == '__main__':
-    for afname in uiuc_airfoils():
-        for fi, ld in zip(UIUCPolars._get_uiuc_files(afname), ["LFT", "DRG"]):
-            with open(f"acdesign/data/uiuc/{afname}.{ld}", "w") as fo:
-                with open(fi, "r") as fin:
-                    fo.write(fin.read())
-                    pass
+    afoil = UIUCPolars.local("CLARKYB")
+    print(afoil.lookup(re=10000, cl=0.6))
+    pass
+#    for afname in uiuc_airfoils():
+#        for fi, ld in zip(UIUCPolars._get_uiuc_files(afname), ["LFT", "DRG"]):
+#            with open(f"acdesign/data/uiuc/{afname}.{ld}", "w") as fo:
+#                with open(fi, "r") as fin:
+#                    fo.write(fin.read())
+#                    pass
