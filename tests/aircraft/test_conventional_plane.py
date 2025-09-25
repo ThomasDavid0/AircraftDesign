@@ -1,10 +1,10 @@
 from pytest import approx, fixture
 from acdesign.aircraft.plane import ConventionalPlane
 from acdesign.aircraft.wing import Wing
-
+from importlib.resources import files
 @fixture
 def cplane():
-    return ConventionalPlane.parse_json("acdesign/data/buddi_tilt.json")
+    return ConventionalPlane.parse_json((files("data") / "buddi_tilt.json"))
 
 
 

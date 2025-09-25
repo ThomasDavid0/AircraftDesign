@@ -5,10 +5,6 @@ import numpy as np
 import pandas as pd
 
 
-
-
-
-
 def test_read_next_re_table_lft():
     with open('tests/airfoils/S1223.LFT', "r") as f:
         lftp = LFTDRGParser(f)

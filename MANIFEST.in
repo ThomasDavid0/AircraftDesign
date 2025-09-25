@@ -1,1 +1,1 @@
-include acdesign/data/*
+include src/data/*

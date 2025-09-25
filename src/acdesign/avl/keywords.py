@@ -5,8 +5,8 @@ from acdesign.aircraft import Panel, Rib, Plane
 from collections import namedtuple
 from itertools import chain
 from enum import Enum
-
-kwfile = "acdesign/avl/kwords.txt"
+from importlib.resources import files
+kwfile = files("data") / "avl/kwords.txt"
 
 
 class AVLParam:

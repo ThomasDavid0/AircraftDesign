@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
-from pkg_resources import resource_stream
+from importlib.resources import files
 from io import StringIO
-
+from pathlib import Path
 
 
 
 class Atmosphere:
-    atm = pd.read_csv(StringIO(resource_stream(__name__,'data/atmosphere.csv').read().decode())).astype(float).set_index("h")
+    atm = pd.read_csv(files('data') / 'atmosphere.csv').astype(float).set_index("h")
     R = 287.058
     GAMMA = 1.4
     mu = 0.0000182

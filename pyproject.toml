@@ -1,0 +1,22 @@
+[project]
+name = "acdesign"
+version="0.0.1"
+description = "Aircraft Design Tools"
+readme = "readme.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.13.5",
+    "pandas>=2.3.2",
+    "pfc-geometry>=0.2.20",
+    "scipy>=1.16.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.3",
+]

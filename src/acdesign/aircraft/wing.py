@@ -1,4 +1,3 @@
-from re import T
 from acdesign.aircraft import Panel, Rib
 from typing import List, Union
 from geometry import Point, P0, Transformation, Euler, PY, Q0

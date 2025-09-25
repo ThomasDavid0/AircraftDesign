@@ -2,12 +2,11 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import LinearNDInterpolator
 from itertools import product
-from pkg_resources import resource_stream, resource_listdir
+from importlib.resources import files
 
 
 def getresource(name: str):
-    return resource_stream('acdesign', f'data/{name}')
-
+    return files('data') / name
 
 class Propeller:
     def calculate(thrust, airspeed, rho):

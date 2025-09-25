@@ -1,17 +1,18 @@
 from pytest import fixture, approx
-from acdesign.performance.performance import Propulsion, Performance
+from acdesign.performance.performance import Performance
+from acdesign.performance.propulsion import Motor, Battery, Propeller
 from acdesign.atmosphere import Atmosphere
 from .conftest import dmodel, wing, fd, op
 
 
 @fixture
-def bperf(dmodel, op):
+def bperf(dmodel):
     return Performance(
         op,
         dmodel,
-        Propulsion.lipo(6, 12.75),
-        5.0,
-        0.0
+        Propeller(),
+        Motor(),
+        Battery.lipo(6, 12.75),
     ) 
 
 

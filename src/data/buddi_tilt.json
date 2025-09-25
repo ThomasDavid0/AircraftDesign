@@ -50,13 +50,13 @@
             "length": 500,
             "sweep": 40,
             "inbd": {
-                "airfoil": "E472-il",
+                "airfoil": "e472-il",
                 "chord": 230,
                 "te_thickness": 1,
                 "incidence": 0.0
             },
             "otbd": {
-                "airfoil": "E472-il",
+                "airfoil": "e472-il",
                 "chord": 190,
                 "te_thickness": 1,
                 "incidence": 0.0
