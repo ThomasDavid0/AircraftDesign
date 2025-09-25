@@ -55,13 +55,13 @@ def test_alpha_to_cl(s1223):
         ].Cl.item(),
         1e-2
     )
-    assert s1223.alpha_to_cl([122600, np.mean([1.53, 2.57])]) == approx(np.mean([1.204,1.297]), 1e-5)
+    assert s1223.alpha_to_cl([122600, np.mean([1.53, 2.57])])[0] == approx(np.mean([1.204,1.297]), 1e-5)
 
     assert not np.isnan(s1223.alpha_to_cl([6e9, 1.53]))[0]
 
 
 def test_lookup(s1223):
-    df = s1223.lookup(re=[100000, 200000], cl=[0.1,0.2,0.8])
+    df = s1223.lookup(re=[100000, 150000, 200000], cl=[0.1,0.2,0.8])
     assert isinstance(df, pd.DataFrame)
 
 
