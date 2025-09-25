@@ -25,8 +25,7 @@ class Atmosphere:
         try:
             row=Atmosphere.atm.loc[h]
         except KeyError:
-            
-            temp = Atmosphere.atm.append(pd.Series(index=Atmosphere.atm.columns, name=h))
+            temp = pd.concat([Atmosphere.atm, pd.DataFrame(index=[h], columns=Atmosphere.atm.columns)])
             row = temp.interpolate(method="values", axis=0).loc[h]       
         return Atmosphere(row["T"], row.p * 1e5, row.v, row.k, row.c)
 
