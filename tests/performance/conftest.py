@@ -36,6 +36,12 @@ def dmodel(wing, fd):
             [UIUCPolars.local("E472")],
             [0,1]
         ),
+        WingAero(
+            0.716584, 
+            0.146712, 
+            [UIUCPolars.local("E472")],
+            [0,1]
+        ),
         fd,
         0.02,
         1.3
