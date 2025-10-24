@@ -1,5 +1,3 @@
-from token import OP
-
 from acdesign.atmosphere import Atmosphere
 from acdesign.performance.aero import FuseAero, WingAero, AircraftAero
 from acdesign.performance.propulsion import Propeller, Motor, Battery
