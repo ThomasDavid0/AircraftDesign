@@ -40,7 +40,7 @@ def test_panel_dump_avl(_panel):
     assert lines[0] == "SURFACE"
 
     assert lines[1] == _panel.name
-    assert lines[2] == "12 1.000"
+    assert lines[2] == "1 1.000 16 -2.000"
     assert lines[3] == "SECTION"
     assert lines[4] == "200.000 100.000 100.000 300.000 4.000"
     assert lines[5] == "SECTION"

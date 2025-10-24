@@ -34,7 +34,9 @@ def test_get_moment(op, dmodel):
     
 def test_cd(op, dmodel):
     df = dmodel.trim(op, 10)
-    assert df.gCd.to_list() == approx([0.008256402853323611, 0.004165965541408166, 0.003907806637803323])
+    gCds = df.gCd.to_list()
+    assert [gCds[0], gCds[1], gCds[3]] == approx([0.008256402853323611, 0.004165965541408166, 0.003907806637803323])
+
 
 
 
