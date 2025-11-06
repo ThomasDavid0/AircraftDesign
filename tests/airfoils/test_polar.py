@@ -3,7 +3,7 @@ from pytest import fixture, approx
 from acdesign.airfoils.polar import LFTDRGParser, UIUCPolars, _list_uiucurl, uiuc_airfoils
 import numpy as np
 import pandas as pd
-
+import xarray as xr
 
 def test_read_next_re_table_lft():
     with open('tests/airfoils/S1223.LFT', "r") as f:
@@ -62,8 +62,14 @@ def test_alpha_to_cl(s1223):
 
 def test_lookup(s1223):
     df = s1223.lookup(re=[100000, 150000, 200000], cl=[0.1,0.2,0.8])
+
+
     assert isinstance(df, pd.DataFrame)
 
+def test_lookup_sweep(s1223):
+    df = s1223.lookup(re=150000, cl="sweep")
+
+    assert isinstance(df, pd.DataFrame)
 
 def test_download():
     clarky = UIUCPolars.local("CLARKYB")
@@ -75,3 +81,5 @@ def test_list_uiuc():
 
 def test_uiuc_airfoils():
     assert "CLARKYB" in uiuc_airfoils()
+
+

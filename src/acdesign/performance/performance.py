@@ -1,5 +1,4 @@
 
-from token import OP
 import numpy as np
 import pandas as pd
 
@@ -11,8 +10,7 @@ from acdesign.performance.operating_point import OperatingPoint
 from acdesign.performance.mass_estimation import estimate_mass
 from acdesign.airfoils.polar import UIUCPolars
 from dataclasses import dataclass
-from inspect import getfullargspec
-from acdesign.base import Modifiable
+
 
 clarky = UIUCPolars.local("CLARKYB")
 sa7038 = UIUCPolars.local("SA7038")
@@ -21,7 +19,7 @@ e472 = UIUCPolars.local("E472")
 
 
 @dataclass
-class Performance(Modifiable):
+class Performance:
     aero: AircraftAero
     mass: float
     propeller: Propeller
@@ -111,11 +109,11 @@ class Performance(Modifiable):
         ).calculate(OperatingPoint(atm, V), wind, True)
 
     @staticmethod
-    def optimize(atm: Atmosphere, vars: dict, consts: dict, cost: callable, version=1, **kwargs):
+    def optimize(atm: Atmosphere, vars: dict, consts: dict, cost: callable, **kwargs):
         from scipy.optimize import shgo
         def fn(vls):
-            runfunc = Performance.run_v2 if version==2 else Performance.run
-            return cost(runfunc(
+            
+            return cost(Performance.run(
                 atm,
                 **{key: vls[i] for i, key in enumerate(vars.keys())},
                 **consts

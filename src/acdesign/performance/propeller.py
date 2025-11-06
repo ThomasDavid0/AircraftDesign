@@ -66,7 +66,7 @@ class LookupPropeller(Propeller):
     
     @staticmethod
     def proprawdata(prop_name):
-        return pd.read_csv(resource_stream('acdesign', f'data/propellers/{prop_name}.csv'))
+        return pd.read_csv(files('acdesign') / f'data/propellers/{prop_name}.csv')
 
     @staticmethod
     def load(diameter: float, prop_name: str):

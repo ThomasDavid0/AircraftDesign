@@ -2,11 +2,13 @@ import urllib.request
 from importlib.resources import files
 from io import TextIOWrapper
 from numbers import Number
-from typing import Union
+from typing import Literal
 from urllib.error import HTTPError
 
 import numpy as np
+import xarray as xr
 import pandas as pd
+import numpy.typing as npt
 from bs4 import BeautifulSoup
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
@@ -51,10 +53,11 @@ class LFTDRGParser:
 
         df = pd.DataFrame(rows, columns=headings).astype("float").assign(re=re)
 
-        direc = np.sign(np.gradient(df.Cl)) if len(df) > 1 else np.ones(1)
-        ist = len(df) if np.all(direc == 1) else df.loc[direc < 0].iloc[0].name
-        arr = np.concatenate([np.ones(ist), -np.ones(len(df) - ist)])
-        return df.assign(pre_stall=arr)
+        cl_direction = np.sign(np.gradient(df.Cl)) if len(df) > 1 else np.ones(1)
+
+        pre_stall = np.where(np.arange(len(df)) <=(cl_direction < 0).argmax(), True, False)
+
+        return df.assign(pre_stall=pre_stall.astype(bool))
 
 
 def linear_or_nearest(points, values):
@@ -73,65 +76,105 @@ def linear_or_nearest(points, values):
 
 class UIUCPolars:
     def __init__(self, lift: pd.DataFrame, drag: pd.DataFrame):
-        self.lift = lift
-        self.drag = drag
-
-        self.pslift = self.lift.loc[self.lift.pre_stall == 1]
-        self.pslift = self.pslift.assign(
-            group=np.cumsum(self.pslift.re.diff() / self.pslift.re > 0.2)
+        self.lift = (
+            lift.assign(re=(5000 * (lift.re / 5000).round()))
+            .reset_index(drop=True)
         )
-        self.pslift = pd.concat(
-            [
-                self.pslift.loc[self.pslift.group == 0].assign(re=0),
-                self.pslift,
-                self.pslift.loc[
-                    self.pslift.group == self.pslift.group.unique()[-1]
-                ].assign(re=2000000),
-            ]
+        self.drag = (
+            drag.assign(re=(5000 * (drag.re / 5000).round()))
+            .reset_index(drop=True)
         )
 
-        self.pslift.assign(
-            group=np.cumsum(self.pslift.re.diff() / self.pslift.re > 0.2)
-        )
+        self.pslift = self.lift.loc[self.lift.pre_stall]
 
         self.alpha_to_cl = linear_or_nearest(
-            (self.pslift.re, self.pslift.alpha), self.pslift.Cl
+            (self.pslift.re/100000, self.pslift.alpha), self.pslift.Cl
         )
         self.cl_to_alpha = linear_or_nearest(
-            (self.pslift.re, self.pslift.Cl), self.pslift.alpha
+            (self.pslift.re/100000, self.pslift.Cl), self.pslift.alpha
         )
         self.cl_to_cm = linear_or_nearest(
-            (self.pslift.re, self.pslift.Cl), self.pslift.Cm
+            (self.pslift.re/100000, self.pslift.Cl), self.pslift.Cm
         )
 
-        self.cl_to_cd = linear_or_nearest((self.drag.re, self.drag.Cl), self.drag.Cd)
+        self.cl_to_cd = linear_or_nearest((self.drag.re/100000, self.drag.Cl), self.drag.Cd)
 
-    def apply(self, recl: np.ndarray) -> pd.DataFrame:
-        alpha, stall = self.cl_to_alpha(recl)
+    @property
+    def minre(self):
+        return self.lift.re.min()
 
-        return pd.DataFrame(
-            np.column_stack(
+    @property 
+    def maxre(self):
+        return self.lift.re.max()
+    
+
+    def apply(self, re: npt.NDArray, cl_or_alpha: npt.NDArray, mode: Literal["cl", "alpha"] = "cl") -> xr.DataArray:
+
+        recl = np.stack([np.tile(re/100000, (len(cl_or_alpha), 1)), np.tile(cl_or_alpha, (len(re), 1)).T]).T
+
+        alpha_or_cl, lift_warning = self.cl_to_alpha(recl) if mode == "cl" else self.alpha_to_cl(recl)
+
+        cm, _ = self.cl_to_cm(recl)
+        cd, drag_warning = self.cl_to_cd(recl)
+
+        return xr.DataArray(
+            np.stack(
                 [
-                    recl[:, 0],
-                    alpha,
-                    recl[:, 1],
-                    self.cl_to_cm(recl)[0],
-                    self.cl_to_cd(recl)[0],
-                    stall,
+                    alpha_or_cl,
+                    cm,
+                    cd,
+                    lift_warning,
+                    drag_warning,
                 ]
             ),
-            columns=["re", "alpha", "Cl", "Cm", "Cd", "stall"],
+            dims=["result", "re", "cl" if mode=="cl" else "alpha"],
+            coords={
+                "result": ["alpha" if mode=="cl" else "cl", "Cm", "Cd", "lift_warning", "drag_warning"],
+                "re": re,
+                "cl" if mode=="cl" else "alpha": cl_or_alpha,
+            },
         )
 
-    def lookup(self, re: Union[list, Number], cl: Union[list, Number]) -> pd.DataFrame:
-        re = [re] if isinstance(re, Number) else re
-        cl = [cl] if isinstance(cl, Number) else cl
-        return self.apply(np.column_stack([re, cl]))
 
-    def alookup(
-        self, re: Union[list, Number], alpha: Union[list, Number]
+    def lookup(
+        self,
+        re: npt.ArrayLike | Literal["sweep"],
+        cl_or_alpha: npt.ArrayLike | str | Literal["sweep"],
+        mode="cl",
+        n_re=50,
+        n_cl=50,
+        clipre:bool=True
     ) -> pd.DataFrame:
-        return self.lookup(re, self.alpha_to_cl(re, alpha))
+        if isinstance(re, str) and re == "sweep":
+            re = np.linspace(self.pslift.re.min(), self.pslift.re.max(), n_re)
+
+        if clipre:
+            re = np.clip(re, self.minre, self.maxre)
+        if isinstance(cl_or_alpha, str) and cl_or_alpha == "sweep":
+            if mode == "cl":
+                cl_or_alpha = np.linspace(self.pslift.Cl.min(), self.pslift.Cl.max(), n_cl)
+            else:
+                cl_or_alpha = np.linspace(self.pslift.alpha.min(), self.pslift.alpha.max(), n_cl)
+            
+
+        re = np.atleast_1d(np.array(re))
+        cl_or_alpha = np.atleast_1d(np.array(cl_or_alpha))
+
+        assert re.ndim == 1
+        assert cl_or_alpha.ndim == 1
+
+        result = self.apply(re, cl_or_alpha, mode)
+
+        gb = result.to_dataframe(name="value").reset_index(level="result").groupby("result")
+        return pd.concat({k: v.rename(k) for k,v in gb['value']}, axis=1).reset_index()
+
+
+    def stall(self, re: npt.ArrayLike, n_cl=50, clipre: bool=True) -> pd.Series:
+        df = self.lookup(re, cl_or_alpha="sweep", n_cl=n_cl, clipre=clipre)
+        df = df.loc[~df.lift_warning.astype(bool)]
+
+        return df.groupby("re").apply(lambda x: x.loc[x.cl.idxmax()], include_groups=False)
+
 
     @staticmethod
     def from_files(lft, drg):
@@ -171,6 +214,17 @@ class UIUCPolars:
                 pass
         else:
             return None
+
+    def plot_drag_polar(self):
+        import plotly.graph_objects as go
+
+        fig = go.Figure()
+
+        for re, df in self.drag.groupby("re"):
+            fig.add_trace(
+                go.Scatter(x=df["Cl"], y=df["Cd"], mode="lines", name=f"Re={re:.2e}")
+            )
+        return fig
 
 
 def _list_uiucurl(vol):

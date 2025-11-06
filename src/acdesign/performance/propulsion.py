@@ -4,10 +4,10 @@ from acdesign.atmosphere import Atmosphere
 from .propeller import Propeller, ConstantPropeller, LookupPropeller
 import numpy as np
 from dataclasses import dataclass
-from acdesign.base import Modifiable
+
 
 @dataclass
-class Battery(Modifiable):
+class Battery:
     capacity: float
     v0: float
     n: float

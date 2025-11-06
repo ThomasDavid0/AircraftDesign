@@ -6,9 +6,6 @@ import pandas as pd
 from .conftest import op, fd, wing, dmodel
 
 
-
-
-
 def test_fuse_drag(op, fd):
     f = fd(op, 0)
     
