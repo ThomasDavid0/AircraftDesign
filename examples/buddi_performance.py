@@ -4,12 +4,12 @@ from acdesign.performance.propulsion import Propeller, Motor, Battery
 from acdesign.performance.operating_point import OperatingPoint
 
 from acdesign.performance.performance import Performance
-from acdesign.airfoils.polar import UIUCPolars
+from acdesign.airfoils.polar import UIUCPolar
 
 
-clarky = UIUCPolars.local("CLARKYB")
-sa7038 = UIUCPolars.local("SA7038")
-e472 = UIUCPolars.local("E472")
+clarky = UIUCPolar.local("CLARKYB")
+sa7038 = UIUCPolar.local("SA7038")
+e472 = UIUCPolar.local("E472")
 
 
 

@@ -2,7 +2,7 @@ from acdesign.performance.operating_point import OperatingPoint
 from acdesign.atmosphere import Atmosphere
 from pytest import fixture
 from acdesign.performance.aero import AircraftAero, WingAero, FuseAero
-from acdesign.airfoils.polar import UIUCPolars
+from acdesign.airfoils.polar import UIUCPolar
 
 @fixture
 def op():
@@ -18,8 +18,8 @@ def wing():
         3.205, 
         0.733561, 
         [
-            UIUCPolars.local("CLARKYB"),
-            UIUCPolars.local("SA7038")
+            UIUCPolar.local("CLARKYB"),
+            UIUCPolar.local("SA7038")
         ],
         [0, 1/3, 1]
     )
@@ -33,13 +33,13 @@ def dmodel(wing, fd):
         WingAero(
             0.716584, 
             0.146712, 
-            [UIUCPolars.local("E472")],
+            [UIUCPolar.local("E472")],
             [0,1]
         ),
         WingAero(
             0.716584, 
             0.146712, 
-            [UIUCPolars.local("E472")],
+            [UIUCPolar.local("E472")],
             [0,1]
         ),
         fd,

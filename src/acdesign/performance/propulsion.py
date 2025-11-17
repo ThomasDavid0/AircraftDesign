@@ -3,6 +3,7 @@ from typing import Any
 from acdesign.atmosphere import Atmosphere
 from .propeller import Propeller, ConstantPropeller, LookupPropeller
 import numpy as np
+import pandas as pd
 from dataclasses import dataclass
 
 
@@ -33,6 +34,8 @@ class Motor:
     def calculate(self, rpm, torque):
         return 2 * np.pi * torque * rpm / 60
 
+    def __call__(self, rpm, torque):
+        return pd.DataFrame(dict(power =self.calculate(rpm, torque)))
 
 @dataclass
 class FactorMotor(Motor):

@@ -6,7 +6,7 @@ from acdesign.aircraft.rib import Rib
 from acdesign.aircraft.component_mass import ComponentMass
 from geometry import Point, PX, Mass, Transformation, Q0, Euler, PY, PZ
 import numpy as np
-from acdesign.airfoils.polar import UIUCPolars
+from acdesign.airfoils.polar import UIUCPolar
 
 
 

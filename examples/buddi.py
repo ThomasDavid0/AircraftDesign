@@ -4,10 +4,10 @@ from acdesign.aircraft.body import Body
 from acdesign.aircraft.component_mass import ComponentMass
 from geometry import Point, PX, Mass, Transformation, Q0, Euler
 import numpy as np
-from acdesign.airfoils.polar import UIUCPolars
+from acdesign.airfoils.polar import UIUCPolar
 
 
-clarky = UIUCPolars.local("CLARKYB")
+clarky = UIUCPolar.local("CLARKYB")
 pols = clarky.lookup(150000, 0.58)
 
 

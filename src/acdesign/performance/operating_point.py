@@ -17,3 +17,7 @@ class OperatingPoint:
             v = self.V,
             q = self.Q
         )
+    
+    
+    def re(self, l: float):
+        return self.atm.rho * self.V * l / self.atm.mu

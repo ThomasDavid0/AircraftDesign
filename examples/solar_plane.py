@@ -1,11 +1,11 @@
 from acdesign.atmosphere import Atmosphere
 from acdesign.performance.operating_point import OperatingPoint
-from acdesign.airfoils.polar import UIUCPolars
+from acdesign.airfoils.polar import UIUCPolar
 from acdesign.performance.aero import AircraftAero, WingAero, FuseAero
 
-clarky = UIUCPolars.local("CLARKYB")
-sa7038 = UIUCPolars.local("SA7038")
-e472 = UIUCPolars.local("E472")
+clarky = UIUCPolar.local("CLARKYB")
+sa7038 = UIUCPolar.local("SA7038")
+e472 = UIUCPolar.local("E472")
 
 nrows=20
 ncols=2

@@ -8,13 +8,13 @@ from acdesign.performance.aero import FuseAero, WingAero, AircraftAero
 from acdesign.performance.propulsion import Battery, Propeller, Motor, ConstantPropeller, FactorMotor, LookupPropeller, BUDDIMotor
 from acdesign.performance.operating_point import OperatingPoint
 from acdesign.performance.mass_estimation import estimate_mass
-from acdesign.airfoils.polar import UIUCPolars
+from acdesign.airfoils.polar import UIUCPolar
 from dataclasses import dataclass
 
 
-clarky = UIUCPolars.local("CLARKYB")
-sa7038 = UIUCPolars.local("SA7038")
-e472 = UIUCPolars.local("E472")
+clarky = UIUCPolar.local("CLARKYB")
+sa7038 = UIUCPolar.local("SA7038")
+e472 = UIUCPolar.local("E472")
 
 
 

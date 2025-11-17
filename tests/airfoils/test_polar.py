@@ -1,6 +1,7 @@
+from calendar import c
 from pytest import fixture, approx
 
-from acdesign.airfoils.polar import LFTDRGParser, UIUCPolars, _list_uiucurl, uiuc_airfoils
+from acdesign.airfoils.polar import LFTDRGParser, UIUCPolar, _list_uiucurl, uiuc_airfoils
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -46,34 +47,34 @@ def test_read_all():
 
 @fixture
 def s1223():
-    return UIUCPolars.from_files('tests/airfoils/S1223.LFT', 'tests/airfoils/S1223.DRG')
+    return UIUCPolar.from_files('tests/airfoils/S1223.LFT', 'tests/airfoils/S1223.DRG')
 
 def test_alpha_to_cl(s1223):
-    assert s1223.alpha_to_cl([122600, 1.53])[0] == approx(
+    assert s1223.alpha_to_cl.grid(122600, 1.53).values.item() == approx(
         s1223.lift.loc[
             np.logical_and(s1223.lift.alpha==1.53, s1223.lift.re==122600), :
         ].Cl.item(),
         1e-2
     )
-    assert s1223.alpha_to_cl([122600, np.mean([1.53, 2.57])])[0] == approx(np.mean([1.204,1.297]), 1e-5)
+    assert s1223.alpha_to_cl.grid(122600, np.mean([1.53, 2.57])).values.item() == approx(np.mean([1.204,1.297]), 1e-5)
 
-    assert not np.isnan(s1223.alpha_to_cl([6e9, 1.53]))[0]
+    assert not np.isnan(s1223.alpha_to_cl.grid([6e9, 1.53]))[0]
 
 
 def test_lookup(s1223):
-    df = s1223.lookup(re=[100000, 150000, 200000], cl=[0.1,0.2,0.8])
+    df = s1223.lookup([100000, 150000, 200000], [0.1,0.2,0.8])
 
 
     assert isinstance(df, pd.DataFrame)
 
 def test_lookup_sweep(s1223):
-    df = s1223.lookup(re=150000, cl="sweep")
+    df = s1223.lookup(150000, "sweep")
 
     assert isinstance(df, pd.DataFrame)
 
 def test_download():
-    clarky = UIUCPolars.local("CLARKYB")
-    assert isinstance(clarky, UIUCPolars)
+    clarky = UIUCPolar.local("CLARKYB")
+    assert isinstance(clarky, UIUCPolar)
 
 def test_list_uiuc():
     airfoils = _list_uiucurl(1)
@@ -83,3 +84,29 @@ def test_uiuc_airfoils():
     assert "CLARKYB" in uiuc_airfoils()
 
 
+def test_get_cd(s1223):
+    cds = s1223.cl_to_cd.grid(150000, 0.5)
+    assert isinstance(cds, xr.DataArray)
+    assert cds.shape == (1,1)
+    cds = s1223.cl_to_cd.grid(np.array([100000, 200000]), 0.5)
+    assert isinstance(cds, xr.DataArray)
+    assert cds.shape == (2,1)
+    cds = s1223.cl_to_cd.grid(150000, np.array([0.0, 0.5, 1.0]))
+    assert isinstance(cds, xr.DataArray)
+    assert cds.shape == (1,3)
+
+    cds = s1223.cl_to_cd.grid(np.linspace(50000, 100000, 4), np.array([0.0, 0.5, 1.0]))
+    assert isinstance(cds, xr.DataArray)
+    assert cds.shape == (4,3)
+
+
+
+def test_get_cd_re_out_of_range(s1223):
+    cd1 = s1223.cl_to_cd.grid([5000, s1223.minre], 0.5)
+    assert 5000 in cd1.to_dataframe("cd").reset_index().re.to_list()
+    
+    pass
+
+def test_get_cd_oto(s1223):
+    cd1 = s1223.cl_to_cd.oto(np.linspace(50000,100000,4), np.linspace(0,1,4))
+    assert cd1.shape == (4,)
