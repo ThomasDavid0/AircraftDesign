@@ -1,166 +1,167 @@
-from acdesign.aircraft import Panel, Rib
-from typing import List, Union
-from geometry import Point, P0, Transformation, Euler, PY, Q0
+
+from dataclasses import dataclass
+from typing import Literal
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
+import plotly.graph_objects as go
+from acdesign.airfoils.airfoil import Airfoil
+from acdesign.avl.keywords import kwdict
+from .wing_panel import WingPanel
+from pathlib import Path    
+import shutil
+from acdesign.avl.avl_runner import run_avl
+from itertools import chain
+from acdesign.avl.parse_avl_output import parse_strip_forces, parse_total_forces
 
-
-
-class WingProps:
-    def __init__(self, w):
-        self.S = sum([p.area for p in w.panels])
-        self.b = (w.panels[-1].otbd.y + w.panels[-1].y)[0] 
-        if w.symm:
-            self.S = self.S * 2
-            self.b = self.b * 2
-
-        self.AR = self.b**2 / self.S
-
-        self.SMC = self.S / self.b
-        self.tr = w.panels[-1].tip.chord / w.panels[0].root.chord
-        
-        self.MAC =  np.sum([p.MAC * p.area for p in w.panels]) / (self.S / 2)
-
-        yMAC = np.sum([(p.pMAC.y + p.y) * p.area for p in w.panels]) / (self.S / 2)
-        xMAC = np.sum([(p.pMAC.x + p.x) * p.area for p in w.panels]) / (self.S / 2)
-        self.pMAC = Point(xMAC, yMAC, 0)
-
-
+@dataclass
 class Wing:
-    def __init__(self, panels: List[Panel], symm=True):
-        self.panels = panels
-        self.symm=symm
-        self.props = WingProps(self)
+    """Assumes panels are connected sequentially from root to tip"""
 
-    def __getattr__(self, name):
-        if name in self.props.__dict__:
-            return getattr(self.props, name)
-        raise AttributeError(f"Attribute {name} not found")
+    panels: list[WingPanel]
 
-    def scale(self, fac):
-        return Wing([p.scale(fac) for p in self.panels], self.symm)
+    @property
+    def b(self) -> float:
+        return sum([p.b for p in self.panels])
 
-    @staticmethod
-    def from_panels(panels):
-        b = 0
-        _ps=[]
-        for p in panels:
-            _ps.append(p.offset(PY(b)))
-            b += p.semispan
-        return Wing(_ps)
+    @property
+    def S(self) -> float:
+        return sum([p.S for p in self.panels])
 
-    @staticmethod
-    def from_ribs(ribs: List[Rib], symm=True):
-        panels = []
-        for i, (r1, r2) in enumerate(zip(ribs[:-1], ribs[1:])):
-            panels.append(Panel(
-                f"wing_p{i}", 
-                Transformation.build(
-                    Point(-r1.x, r1.y, -r1.z), 
-                    Euler(np.pi, 0, np.pi)
-                ), 
-                [r1.offset(-r1.transform.p),
-                r2.offset(-r1.transform.p)]
-            ))
-        return Wing(panels, symm)
+    @property
+    def AR(self) -> float:
+        return self.b**2 / self.S
 
-    def scale(self, fac: float):
-        return Wing([p.scale(fac) for p in self.panels])
+    @property
+    def smc(self) -> float:
+        return self.S / self.b
 
-    @staticmethod
-    def straight_taper(name, b, S, TR, le_sweep, section:Union[str, List[str]], dihedral=0, symm=True ):
-        smc = S / b
-        cr = 2 * smc / (1+TR)
-        ct = TR * cr
+    @property
+    def bs(self):
+        return np.array([p.b for p in self.panels])
 
-        return Wing([Panel(
-            f"{name}",
-            Transformation(P0(),Euler(np.radians(dihedral) + np.pi, 0, np.pi)),
-            [
-                Rib.create(section[0], cr, P0(), 2),
-                Rib.create(section[1], ct, Point(le_sweep, b/2, 0), 2)
-            ]
-        )], symm)
+    @property
+    def ys(self):
+        return self.bs.cumsum() / self.b
 
+    def __repr__(self) -> str:  
+        return f"Wing(b={self.b:.2f}, S={self.S:.2f}, AR={self.AR:.2f}, smc={self.smc:.2f}, TR={self.C(1)[0] / self.C(0)[0]:.2f})"
 
-    @staticmethod
-    def double_taper(
-        name, b, S, TR, le_sweep, 
-        section:Union[str, List[str]], 
-        incidence: Union[float, List[float]]=0,
-        kink_loc = 12*25.4+100, gap=60
+    def get_panel(self, y: npt.ArrayLike):
+        y = np.atleast_1d(y)
+        assert y.ndim == 1
+        ys = self.ys
+        panel_lens = self.bs / self.b
+        panel_id = len(ys) - (np.outer(y, np.ones_like(ys)) <= ys).sum(axis=1)
+        y0s = np.array([0, *ys])
+        panel_y = (y - y0s[panel_id]) / panel_lens[panel_id]
+        return panel_id, np.clip(panel_y, 0, 1)
+
+    def C(self, y: npt.NDArray) -> npt.ArrayLike:
+        """Get chord at spanwise location y
+
+        Args:
+            y (npt.ArrayLike): spanwise location from 0 to 1
+
+        Returns:
+            npt.ArrayLike: chord at location y
+        """
+        y = np.atleast_1d(y)
+        assert y.ndim == 1
+        panel_id, panel_y = self.get_panel(y)
+        return np.array([self.panels[id].C(y) for id, y in zip(panel_id, panel_y)])
+
+    def le(self, y: npt.ArrayLike) -> npt.NDArray:
+        y = np.atleast_1d(y)
+        assert y.ndim == 1
+        panel_id, panel_y = self.get_panel(y)
+        return np.array([self.panels[id].le(y) for id, y in zip(panel_id, panel_y)])
+
+    def plot(self, npoints: int = 100):
+        fig = go.Figure()
+        y = np.linspace(0, 1, npoints)
+        fig.add_trace(
+            go.Scatter(
+                x=y * self.b / 2, y=self.le(y), mode="lines", name="Leading Edge"
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=y * self.b / 2,
+                y=self.le(y) + self.C(y),
+                mode="lines",
+                name="Trailing Edge",
+            )
+        )
+        return fig.update_layout(yaxis=dict(scaleanchor="x"))
+
+    def avl_surface(
+        self, ylocs: npt.ArrayLike, sections: list[Airfoil] | Literal["flat"] = "flat"
     ):
-        if isinstance(section, str):
-            section = [section for _ in range(4)]
-            #"fx63137-il"
-            #mh32-il
-        if isinstance(incidence, float):
-            incidence = [incidence for _ in range(4)]
-        
-        a = kink_loc
-        cr = 0.5*S / (a + (1 + TR) * (b/4 - a / 2))
-        ct = TR * cr
-        
-        ac_to_p = Transformation(P0(),Euler(np.pi, 0, np.pi)) 
-        
-        return Wing([
-            Panel(
-                f"{name}_centre", 
-                ac_to_p,
-                [
-                    Rib.create(section[0],cr,P0(), 2, incidence[0]),
-                    Rib.create(section[1],cr,PY(a), 2, incidence[1])
-                ]
-            ),
-            Panel(
-                f"{name}_outer", 
-                ac_to_p.offset(PY(gap + a)),
-                [
-                    Rib.create(section[2],cr,P0(), 2, incidence[2]),
-                    Rib.create(section[3],ct,Point(le_sweep, b/2 - a - gap, 0), 2, incidence[3]),
-                ]
-            )
-        ])
+        ylocs = np.atleast_1d(ylocs)
+        odata = kwdict["SURFACE"]("Wing", 12, 0.0, 50, 0.0)
 
+        le = self.le(ylocs)
+        C = self.C(ylocs)
+        y = ylocs * self.b / 2
 
-    def fill_gaps(self):
-        new_panels = []
-        for pi, po in zip(self.panels[:-1], self.panels[1:]):
-            new_panels.append(pi)
-            if abs(pi.transform.apply(pi.tip.transform) - po.transform.apply(po.root.transform))[0] > 0.1:
-                new_panels.append(Panel(
-                    f"{pi.name}_{po.name}",
-                    Transformation.build(Point(pi.le_sweep_distance, pi.semispan, 0), Q0()).apply(pi.transform),
-                    [
-                        pi.tip.offset(-pi.tip.transform.p),
-                        po.root.offset(Point((pi.x-pi.tip.x)-po.x , po.y-(pi.y + pi.tip.y), (pi.z - pi.tip.z)-po.z))
+        for i in range(len(ylocs)):
+            odata += kwdict["SECTION"](le[i], y[i], 0, C[i], 0)
+            shutil.copyfile("src/data/uiuc/" + sections[i].name + ".dat", f"avl/{sections[i].name}.dat")
+            if sections != "flat":
+                odata += kwdict["AFILE"](None, None, sections[i].name + ".dat")
+        return odata
+
+    def avl_header(self):
+        return kwdict["HEADER"](
+            "MACE 1", 0, 1, 0, 0, self.S, self.smc, self.b, -self.smc / 4, 0, 0
+        )[1:]
+    
+    def dump_avl(self, file: Path, ylocs: npt.ArrayLike, sections: list[Airfoil] | Literal["flat"] = "flat"):
+        avldata = self.avl_surface(ylocs, sections)
+        file.write_text("\n".join(self.avl_header() + avldata))
+
+        
+    def run_avl(
+        self,
+        cls: npt.ArrayLike,
+        ylocs: npt.ArrayLike, 
+        sections: list[Airfoil] | Literal["flat"] = "flat"
+    ):
+        self.dump_avl(Path("avl/geom.avl"), ylocs, sections)
+        cls = np.atleast_1d(cls)
+        assert cls.ndim == 1
+        for i in range(len(cls)):
+            shutil.rmtree(Path(f"avl/strip_forces_{i}.out"), ignore_errors=True)
+            shutil.rmtree(Path(f"avl/total_forces_{i}.out"), ignore_errors=True)
+
+        run_avl(
+            [
+                "load geom.avl",
+                "OPER",
+                *chain(
+                    *[
+                        [
+                            f"a c {cl}",
+                            "x",
+                            f"ft total_forces_{i}.out",
+                            f"fs strip_forces_{i}.out",
+                        ]
+                        for i, cl in enumerate(cls)
                     ]
-                ))
-            new_panels.append(po)
-        return Wing(new_panels, self.symm)
+                ),
+                "",
+                "QUIT",
+            ]
+        )
 
-    def extend_inboard(self):
-        if self.panels[0].root.transform.y == 0:
-            return self
-        else:
-            return Wing(
-                [Panel.square(
-                    f"{self.panels[0].name}_fus",
-                    self.panels[0].root.transform.y,
-                    self.panels[0].root.offset(-PY(self.panels[0].root.transform.y)) 
-                )] + self.panels,
-                self.symm
-            )
+        sloads = [
+            parse_strip_forces(Path(f"avl/strip_forces_{i}.out"), self.b)
+            for i in range(len(cls))
+        ]
 
-    def apply_transformation(self, transform: Transformation):
-        return Wing([p.apply_transformation(transform) for p in self.panels], self.symm)
-
-    def offset(self, trans: Point):
-        return Wing([p.offset(trans) for p in self.panels], self.symm)
-
-
-    # extend to centre
-
-    # fill gaps
-
-    #sort panels
-
+        loads = pd.DataFrame(
+            [parse_total_forces(Path(f"avl/total_forces_{i}.out")) for i in range(len(cls))]
+        )
+        return loads, sloads
+    

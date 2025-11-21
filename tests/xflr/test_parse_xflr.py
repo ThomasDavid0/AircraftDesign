@@ -1,5 +1,5 @@
 import pytest
-from acdesign.aircraft.plane import Plane
+from acdesign.old_aircraft.plane import Plane
 from acdesign.xflr.parse import parse_xflr_plane, parse_xflr_wing
 import xml.etree.ElementTree as ET
 from geometry import Point

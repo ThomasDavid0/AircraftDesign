@@ -1,7 +1,7 @@
 from re import I
 
 from pytest import approx
-from acdesign.aircraft import Panel, Rib, Airfoil
+from acdesign.old_aircraft import Panel, Rib, Airfoil
 from geometry import Transformation, Point, Quaternion, Euler
 import numpy as np
 from .conftest import _panel

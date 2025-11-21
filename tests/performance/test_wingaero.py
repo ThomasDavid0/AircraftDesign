@@ -36,6 +36,12 @@ def test_call(wing: WingAero, op: OperatingPoint):
 
     np.testing.assert_array_almost_equal(res.lift, ls)
 
+def test_v_min_drag(wing: WingAero, op: OperatingPoint):
+    vmin = wing.minimize(lambda row: row.drag, op.atm, np.array([10, 12]) * 9.81)
+    assert vmin.fs_v == approx(17.84, rel=0.01)
+
+
+
 def test_wing_stall_cl(wing: WingAero, op):
     sc = wing.stall(op)
     assert sc['Cl'] == approx(1.28, rel=0.01)

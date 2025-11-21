@@ -2,7 +2,8 @@ from this import d
 import pytest
 from geometry import Transformation, Point, Euler
 import numpy as np
-from acdesign.avl.dump import *
+from acdesign.avl.dump import panel_dump_avl, rib_dump_avl
+from acdesign.old_aircraft import Panel, Rib
 from acdesign.avl.keywords import kwdict, kw4dict
 
 @pytest.fixture

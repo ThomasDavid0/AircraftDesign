@@ -1,8 +1,10 @@
+from email.policy import HTTP
+from pathlib import Path
 import urllib.request
-from urllib.error import HTTPError
-from geometry import Point, PX, PY
+from geometry import Point, PY
 import numpy as np
 from scipy.interpolate import interp1d
+import shutil
 
 
 class Airfoil:
@@ -11,7 +13,7 @@ class Airfoil:
         self.points = points
 
     @staticmethod
-    def parse_selig(file):      
+    def parse_selig(file: str):      
                 
         with open(file) as f:
             lines = [l.strip()  for l in f.readlines()]
@@ -39,14 +41,22 @@ class Airfoil:
         )
 
     @staticmethod
-    def download(airfoiltoolsname):
+    def download(airfoilname: str, outfolder: Path = None):
         #https://m-selig.ae.illinois.edu/ads/coord_updates/la5055.dat
-        if airfoiltoolsname[-3:] == "-il":
-            airfoiltoolsname = airfoiltoolsname[:-3]
+        name = airfoilname.lower()
+        name = name[-3] if name.endswith("-il") else name
 #            _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)            
+        try:
+            _file = urllib.request.urlretrieve(f"https://m-selig.ae.illinois.edu/ads/coord_seligFmt/{name}.dat")
+        except Exception as e:
+            print("cannot find airfoil ", airfoilname)
+            return None
 
- #       else:
-        _file = urllib.request.urlretrieve(f"https://m-selig.ae.illinois.edu/ads/coord/{airfoiltoolsname}.dat")
+        if outfolder is not None:
+            if (Path(outfolder) / f"{airfoilname}.dat").exists():
+                print(f"cannot write {name} to {airfoilname}.dat, already exists")
+            else:
+                shutil.copy(_file[0], outfolder / f"{airfoilname}.dat")
         return Airfoil.parse_selig(_file[0])
 
     @property

@@ -9,7 +9,7 @@ from .operating_point import OperatingPoint
 from acdesign.airfoils.polar import UIUCPolar
 from typing import Callable, Literal
 from scipy.optimize import minimize, Bounds
-from acdesign.aircraft import Wing
+from acdesign.old_aircraft import Wing
 from dataclasses import dataclass
 
 
@@ -215,6 +215,25 @@ class WingAero:
             drag=0.5 * atm.rho * results.fs_v**2 * self.S * results.Cd,
             moment=0.5 * atm.rho * results.fs_v**2 * self.S * self.smc * results.Cm,
         )
+
+    def minimize(self, fun: Callable[[pd.Series], float], atm: Atmosphere, lift: npt.ArrayLike, bounds=(5,30), tol=0.1, n=10):
+        """get the velocity for minimum drag at a given lift"""
+        lift = np.atleast_1d(lift)
+        if len(lift) > 1:
+            return pd.concat(
+                [self.minimize(fun, atm, l, bounds, tol, n) for l in lift], axis=1
+            ).T
+
+        step = bounds[1] - bounds[0]
+        while step > tol:
+            res = self(atm, np.linspace(bounds[0], bounds[1], n), lift, mode="grid")
+            
+            _res = res.apply(fun, axis=1)
+            idx = _res.idxmin()
+            bounds = (res.fs_v[max(idx-1, 0)], res.fs_v[min(idx+1, len(res)-1)])
+            step = bounds[1] - bounds[0]
+        return res.assign(minVal= _res).iloc[idx]
+       
 
     @staticmethod
     def e_howe(

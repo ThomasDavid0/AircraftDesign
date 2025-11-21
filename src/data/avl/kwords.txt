@@ -8,7 +8,7 @@ acname                                 | name
 
 SURFACE                                | (keyword)
 MainWing                               | name
-1    1.0  16  -2.0                     | Nchord  Cspace   Nspan Sspace
+1    1.0  16  -2.0                     | Nchord  Cspace !Nspan !Sspace
 
 COMPONENT                              | (keyword)
 3                                      | Lcomp

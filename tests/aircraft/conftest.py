@@ -1,6 +1,6 @@
 
 import pytest
-from acdesign.aircraft import Panel, Rib
+from acdesign.old_aircraft import Panel, Rib
 from geometry import Transformation, Point, Euler
 import numpy as np
 

@@ -1,6 +1,6 @@
 from pytest import approx, fixture
-from acdesign.aircraft.plane import ConventionalPlane
-from acdesign.aircraft.wing import Wing
+from acdesign.old_aircraft.plane import ConventionalPlane
+from acdesign.old_aircraft.wing import Wing
 from importlib.resources import files
 @fixture
 def cplane():

@@ -1,5 +1,5 @@
-from acdesign.aircraft import Rib, Panel
-from acdesign.aircraft.wing import Wing
+from acdesign.old_aircraft import Rib, Panel
+from acdesign.old_aircraft.wing import Wing
 from geometry import Point
 from .conftest import _panel
 import numpy as np

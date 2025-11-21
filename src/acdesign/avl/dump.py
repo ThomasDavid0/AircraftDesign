@@ -1,6 +1,6 @@
 from .keywords import AVLParam, kwdict
 
-from acdesign.aircraft import Rib, Panel, Plane
+from acdesign.old_aircraft import Rib, Panel, Plane
 from typing import NamedTuple, List
 
 from geometry import P0, Transformation, Euler

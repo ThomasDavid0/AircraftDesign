@@ -1,5 +1,5 @@
 import pytest
-from acdesign.aircraft.component_mass import ComponentMass
+from acdesign.old_aircraft.component_mass import ComponentMass
 from geometry import Point, Mass, P0
 import numpy as np
 

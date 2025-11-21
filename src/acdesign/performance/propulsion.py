@@ -5,6 +5,7 @@ from .propeller import Propeller, ConstantPropeller, LookupPropeller
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
+import numpy.typing as npt
 
 
 @dataclass
@@ -48,6 +49,19 @@ class FactorMotor(Motor):
     def calculate(self, rpm, torque):
         return 2 * np.pi * torque * (rpm / 60) / self.factor
     
+
+
+@dataclass
+class PropulsionSystem:
+    propeller: Propeller
+    motor: Motor
+
+    def __call__(self, atm: Atmosphere, airspeed: npt.ArrayLike, thrust: float) -> npt.ArrayLike:
+        rpm, torque = self.propeller.calculate(thrust, airspeed, atm.rho)
+        power = self.motor.calculate(rpm, torque)
+        return power
+
+
 
 data=np.array([
 [0.0028486974173058677, 0.07876561182546382],

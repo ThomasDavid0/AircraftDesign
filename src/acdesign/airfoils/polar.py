@@ -2,17 +2,17 @@ from collections import namedtuple
 import urllib.request
 from importlib.resources import files
 from io import TextIOWrapper
-from numbers import Number
-from typing import Literal, NamedTuple
+from typing import Literal
 from urllib.error import HTTPError
-
+from itertools import chain
 from makefun import partial
 import numpy as np
 import xarray as xr
 import pandas as pd
 import numpy.typing as npt
 from bs4 import BeautifulSoup
-
+from .airfoil import Airfoil
+from pathlib import Path
 
 all_resources = files("data")
 
@@ -83,6 +83,10 @@ class UIUCPolar:
         self.cl_to_cm = UIUCPolar.create_mapping(self.pslift, "Cl", "Cm", 4)
         self.alpha_to_cm = UIUCPolar.create_mapping(self.pslift, "alpha", "Cm", 4)
         self.cl_to_alpha = UIUCPolar.create_mapping(self.pslift, "Cl", "alpha", 4)
+
+
+    def airfoil(self):
+        return Airfoil.download(self.name.lower())
 
     @staticmethod
     def create_mapping(df: pd.DataFrame, source_col: str, target_col: str, degree=4):
@@ -275,6 +279,11 @@ class UIUCPolar:
                 ]
             except HTTPError:
                 pass
+            #try:
+            #    dat = urllib.request.urlretrieve(f"https://m-selig.ae.illinois.edu/ads/coord/{airfoil_name}.dat")[0]
+            #except HTTPError:
+            #    dat = None
+            
         else:
             return None
 
@@ -290,44 +299,39 @@ class UIUCPolar:
         return fig
 
 
-def _list_uiucurl(vol):
-    resp = urllib.request.urlopen(
-        f"https://m-selig.ae.illinois.edu/pd/pub/lsat/vol{vol}/"
-    )
-    soup = BeautifulSoup(resp, features="html.parser")
-
-    def isaf(file):
-        return ".DRG" in file
-
-    files = [node.get("href") for node in soup.find_all("a")]
-    return [f[:-4] for f in files if isaf(f)]
-
-
-import itertools
-
-
-def uiuc_airfoils():
-    return list(itertools.chain(*[_list_uiucurl(i + 1) for i in range(4)]))
-
-
 def list_url_files(url, extension):
     resp = urllib.request.urlopen(url)
     soup = BeautifulSoup(resp, features="html.parser")
 
-    def isaf(file):
-        return f".{extension}" in file
-
     files = [node.get("href") for node in soup.find_all("a")]
-    return [f[:-4] for f in files if isaf(f)]
+    return [f[:-4] for f in files if f.endswith(f".{extension}")]
 
 
-if __name__ == "__main__":
-    afoil = UIUCPolar.local("CLARKYB")
-    print(afoil.lookup(re=10000, cl=0.6))
-    pass
-#    for afname in uiuc_airfoils():
-#        for fi, ld in zip(UIUCPolars._get_uiuc_files(afname), ["LFT", "DRG"]):
-#            with open(f"acdesign/data/uiuc/{afname}.{ld}", "w") as fo:
-#                with open(fi, "r") as fin:
-#                    fo.write(fin.read())
-#                    pass
+def _list_uiucurl(vol):
+    return list_url_files(f"https://m-selig.ae.illinois.edu/pd/pub/lsat/vol{vol}/", "DRG")
+
+def _list_dat_files():
+    return list_url_files("https://m-selig.ae.illinois.edu/ads/coord_seligFmt/", ".dat")
+
+
+def uiuc_airfoils():
+    return list(chain(*[_list_uiucurl(i + 1) for i in range(4)]))
+
+def local_uiuc_airfoils():
+    return [f.stem for f in Path("src/data/uiuc").glob("*.LFT")]
+
+def local_dat_airfoils():
+    return [f.stem for f in Path("src/data/uiuc").glob("*.dat")]
+
+
+def available_sections():
+    uiuc = local_uiuc_airfoils()
+    dat = local_dat_airfoils()
+    
+    return set(uiuc).intersection(set(dat))
+
+def download_dat_files():
+    airfoils = uiuc_airfoils()
+    for lftfile in Path("src/data/uiuc").glob("*.LFT"):
+        Airfoil.download(lftfile.stem, Path("src/data/uiuc"))
+    

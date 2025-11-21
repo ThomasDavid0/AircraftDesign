@@ -1,6 +1,6 @@
 from geometry import Point
 from typing import List, Tuple, Union, NamedTuple
-from acdesign.aircraft import Panel, Rib, Plane
+from acdesign.old_aircraft import Panel, Rib, Plane
 from collections import namedtuple
 from itertools import chain
 from enum import Enum
@@ -33,14 +33,12 @@ class AVLParam:
 
 
 def _read_kwordfile(file):
-    #parse file and split on |
+    
     with open(file, "r") as f:
         data = [l.strip().split("|") for l in f.readlines() if "|" in l]
     
-    # break columns on spaces
     data = [[l.strip().split() for l in line] for line in data]
 
-    #separate into keyword subsets
     _keydata = []
     for r in data:
         if "keyword" in r[1][0]:
@@ -91,7 +89,9 @@ class KeyWord:
 
     def create(self, *args):
         return self.NTuple(*[args[i] if i < len(args) else None for i in range(len(self.parms))])
-        
+    
+    def __call__(self, *args):
+        return self.dump(self.create(*args))
 
     def parse(self, data:str) -> NamedTuple:
         data = [line.split() for line in data]

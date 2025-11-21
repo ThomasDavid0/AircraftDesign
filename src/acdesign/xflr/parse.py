@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
 
 from geometry import Point
-from acdesign.aircraft.plane import Plane
-from acdesign.aircraft.panel import Panel
+from acdesign.old_aircraft.plane import Plane
+from acdesign.old_aircraft.panel import Panel
 
 from acdesign.airfoils.airfoil import Airfoil
 

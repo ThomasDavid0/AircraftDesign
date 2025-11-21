@@ -5,6 +5,7 @@ from acdesign.airfoils.polar import LFTDRGParser, UIUCPolar, _list_uiucurl, uiuc
 import numpy as np
 import pandas as pd
 import xarray as xr
+import geometry as g
 
 def test_read_next_re_table_lft():
     with open('tests/airfoils/S1223.LFT', "r") as f:
@@ -47,7 +48,7 @@ def test_read_all():
 
 @fixture
 def s1223():
-    return UIUCPolar.from_files('tests/airfoils/S1223.LFT', 'tests/airfoils/S1223.DRG')
+    return UIUCPolar.local("S1223")
 
 def test_alpha_to_cl(s1223):
     assert s1223.alpha_to_cl.grid(122600, 1.53).values.item() == approx(
@@ -110,3 +111,10 @@ def test_get_cd_re_out_of_range(s1223):
 def test_get_cd_oto(s1223):
     cd1 = s1223.cl_to_cd.oto(np.linspace(50000,100000,4), np.linspace(0,1,4))
     assert cd1.shape == (4,)
+
+
+
+def test_load_geometry(s1223: UIUCPolar):
+    af = s1223.airfoil()
+    assert af.name == "s1223"
+    assert isinstance(af.points, g.Point)
