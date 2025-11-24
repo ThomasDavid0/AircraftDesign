@@ -25,7 +25,7 @@ def parse_strip_force_df(file: Path):
 def parse_strip_forces(file: Path, b: float) -> pd.DataFrame:
     """Parse AVL strip forces output file into a spline."""
     df = parse_strip_force_df(file)
-    return make_interp_spline(df.Yle * 2 / b, df.c_cl / df.c_cl.mean(), k=3)
+    return make_interp_spline(df.Yle * 2 / b, df.c_cl, k=3)
 
 
 def parse_total_forces(file: Path) -> NamedTuple:

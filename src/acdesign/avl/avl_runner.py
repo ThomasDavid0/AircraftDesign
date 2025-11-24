@@ -17,7 +17,10 @@ def run_avl(commands: list[str]) -> None:
         cwd=Path("avl"),
     )
     process.stdin.write("\n".join(commands).encode())
-    return process.communicate()
+    output, error = process.communicate()
+    if error:
+        raise RuntimeError(f"AVL Error: {error.decode()}")
+    return output
 
 
 

@@ -67,10 +67,10 @@ class LFTDRGParser:
 class UIUCPolar:
     def __init__(self, name: str, lift: pd.DataFrame, drag: pd.DataFrame):
         self.name = name
-        self.lift = lift.assign(re=(10000 * (lift.re / 10000).round())).reset_index(
+        self.lift = lift.assign(re=(20000 * (lift.re / 20000).round())).reset_index(
             drop=True
         )
-        self.drag = drag.assign(re=(10000 * (drag.re / 10000).round())).reset_index(
+        self.drag = drag.assign(re=(20000 * (drag.re / 20000).round())).reset_index(
             drop=True
         )
 

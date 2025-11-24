@@ -12,8 +12,14 @@ class Airfoil:
         self.name = name
         self.points = points
 
+    def dump_selig(self, file: str | Path):
+        with open(file, "w") as f:
+            f.write(f"{self.name}\n")
+            for p in self.points:
+                f.write(f"{p.x[0]:.6f} {p.y[0]:.6f}\n")
+
     @staticmethod
-    def parse_selig(file: str):      
+    def parse_selig(file: str | Path):      
                 
         with open(file) as f:
             lines = [l.strip()  for l in f.readlines()]

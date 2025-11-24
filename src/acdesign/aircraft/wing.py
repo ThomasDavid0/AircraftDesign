@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from typing import Literal
 import numpy as np
@@ -6,13 +5,15 @@ import numpy.typing as npt
 import pandas as pd
 import plotly.graph_objects as go
 from acdesign.airfoils.airfoil import Airfoil
+from acdesign.airfoils.polar import UIUCPolar
 from acdesign.avl.keywords import kwdict
 from .wing_panel import WingPanel
-from pathlib import Path    
+from pathlib import Path
 import shutil
 from acdesign.avl.avl_runner import run_avl
 from itertools import chain
 from acdesign.avl.parse_avl_output import parse_strip_forces, parse_total_forces
+from acdesign.performance.aero import WingAero
 
 @dataclass
 class Wing:
@@ -44,7 +45,7 @@ class Wing:
     def ys(self):
         return self.bs.cumsum() / self.b
 
-    def __repr__(self) -> str:  
+    def __repr__(self) -> str:
         return f"Wing(b={self.b:.2f}, S={self.S:.2f}, AR={self.AR:.2f}, smc={self.smc:.2f}, TR={self.C(1)[0] / self.C(0)[0]:.2f})"
 
     def get_panel(self, y: npt.ArrayLike):
@@ -82,7 +83,7 @@ class Wing:
         y = np.linspace(0, 1, npoints)
         fig.add_trace(
             go.Scatter(
-                x=y * self.b / 2, y=self.le(y), mode="lines", name="Leading Edge"
+                x=y * self.b / 2, y=self.le(y), mode="lines", line=dict(color="black"), name="Leading Edge"
             )
         )
         fig.add_trace(
@@ -90,7 +91,9 @@ class Wing:
                 x=y * self.b / 2,
                 y=self.le(y) + self.C(y),
                 mode="lines",
+                line=dict(color="black"),
                 name="Trailing Edge",
+                showlegend=False
             )
         )
         return fig.update_layout(yaxis=dict(scaleanchor="x"))
@@ -107,7 +110,10 @@ class Wing:
 
         for i in range(len(ylocs)):
             odata += kwdict["SECTION"](le[i], y[i], 0, C[i], 0)
-            shutil.copyfile("src/data/uiuc/" + sections[i].name + ".dat", f"avl/{sections[i].name}.dat")
+            Airfoil.parse_selig(
+                "src/data/uiuc/" + sections[i].name + ".dat"
+            ).dump_selig(f"avl/{sections[i].name}.dat")
+
             if sections != "flat":
                 odata += kwdict["AFILE"](None, None, sections[i].name + ".dat")
         return odata
@@ -116,24 +122,29 @@ class Wing:
         return kwdict["HEADER"](
             "MACE 1", 0, 1, 0, 0, self.S, self.smc, self.b, -self.smc / 4, 0, 0
         )[1:]
-    
-    def dump_avl(self, file: Path, ylocs: npt.ArrayLike, sections: list[Airfoil] | Literal["flat"] = "flat"):
+
+    def dump_avl(
+        self,
+        file: Path,
+        ylocs: npt.ArrayLike,
+        sections: list[Airfoil] | Literal["flat"] = "flat",
+    ):
         avldata = self.avl_surface(ylocs, sections)
+        shutil.rmtree(file, ignore_errors=True)
         file.write_text("\n".join(self.avl_header() + avldata))
 
-        
     def run_avl(
         self,
         cls: npt.ArrayLike,
-        ylocs: npt.ArrayLike, 
-        sections: list[Airfoil] | Literal["flat"] = "flat"
+        ylocs: npt.ArrayLike,
+        sections: list[Airfoil] | Literal["flat"] = "flat",
     ):
         self.dump_avl(Path("avl/geom.avl"), ylocs, sections)
         cls = np.atleast_1d(cls)
         assert cls.ndim == 1
         for i in range(len(cls)):
-            shutil.rmtree(Path(f"avl/strip_forces_{i}.out"), ignore_errors=True)
-            shutil.rmtree(Path(f"avl/total_forces_{i}.out"), ignore_errors=True)
+            Path(f"avl/strip_forces_{i}.out").unlink(missing_ok=True)
+            Path(f"avl/total_forces_{i}.out").unlink(missing_ok=True)
 
         run_avl(
             [
@@ -160,8 +171,18 @@ class Wing:
             for i in range(len(cls))
         ]
 
-        loads = pd.DataFrame(
-            [parse_total_forces(Path(f"avl/total_forces_{i}.out")) for i in range(len(cls))]
-        )
+        loads = pd.concat(
+            [
+                pd.Series(parse_total_forces(Path(f"avl/total_forces_{i}.out")))
+                for i in range(len(cls))
+            ], keys=cls, axis=1
+        ).T.reset_index().rename(columns=dict(index="Cl"))
+
+
         return loads, sloads
+
+    def performance_wing(self, ylocs: list[float], polars: list[UIUCPolar]):
+        return WingAero(
+            self.b, self.S, polars, ylocs, self.C
+        )
     
