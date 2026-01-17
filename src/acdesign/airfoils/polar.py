@@ -86,7 +86,9 @@ class UIUCPolar:
 
 
     def airfoil(self):
-        return Airfoil.download(self.name.lower())
+        #return [f.stem for f in Path("src/data/uiuc").glob("*.dat")]
+        return Airfoil.parse_selig(Path(f"src/data/uiuc/{self.name}.dat"))
+#        return Airfoil.download(self.name.lower())
 
     @staticmethod
     def create_mapping(df: pd.DataFrame, source_col: str, target_col: str, degree=4):

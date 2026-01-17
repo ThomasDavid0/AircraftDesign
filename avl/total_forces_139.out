@@ -13,19 +13,19 @@
 
  Run case:  -unnamed-                              
 
-  Alpha =   4.88965     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Alpha =  14.91032     pb/2V =  -0.00000     p'b/2V =  -0.00000
   Beta  =   0.00000     qc/2V =   0.00000
   Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
 
-  CXtot =   0.05790     Cltot =  -0.00000     Cl'tot =  -0.00000
-  CYtot =   0.00000     Cmtot =  -0.51235
-  CZtot =  -0.80514     Cntot =  -0.00000     Cn'tot =  -0.00000
+  CXtot =   0.37384     Cltot =  -0.00000     Cl'tot =  -0.00000
+  CYtot =   0.00000     Cmtot =  -0.87731
+  CZtot =  -1.57050     Cntot =  -0.00000     Cn'tot =  -0.00000
 
-  CLtot =   0.80715
-  CDtot =   0.01094
-  CDvis =   0.00000     CDind = 0.0109410
-  CLff  =   0.80808     CDff  = 0.0109863    | Trefftz
-  CYff  =   0.00000         e =    0.9906    | Plane  
+  CLtot =   1.61382
+  CDtot =   0.04285
+  CDvis =   0.00000     CDind = 0.0428519
+  CLff  =   1.62523     CDff  = 0.0443892    | Trefftz
+  CYff  =   0.00000         e =    0.9917    | Plane  
 
 
  ---------------------------------------------------------------

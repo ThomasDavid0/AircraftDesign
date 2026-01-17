@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from turtle import st
+from typing import Literal
 
 from acdesign.aircraft.wing import Wing
 from acdesign.aircraft.wing_panel import WingPanel
@@ -14,6 +15,8 @@ from acdesign.performance.propulsion import (
     ConstantPropeller,
 )
 import plotly.graph_objects as go
+from scipy.interpolate import RegularGridInterpolator, interp1d
+
 
 pw = 0.13
 propulsion = PropulsionSystem(
@@ -43,7 +46,6 @@ class SolarWing:
 
     @staticmethod
     def straight(nrows, ncols, section):
-        
         b = nrows * pw + 0.1
         C = ncols * pw + 0.1
         wing = Wing([WingPanel.trapezoidal(b, b * C, 1)])
@@ -71,7 +73,8 @@ class SolarWing:
         return SolarWing(
             wing,
             WingAero(b, S, [section], [0, 1], wing.C),
-            len(SolarWing.place_panels(wing)) * 2,  # for now assume 1 row in tip section
+            len(SolarWing.place_panels(wing))
+            * 2,  # for now assume 1 row in tip section
         )
 
     @staticmethod
@@ -114,31 +117,32 @@ class SolarWing:
         return SolarWing(
             wing,
             WingAero(b, S, [section], [0, 1], wing.C),
-            len(SolarWing.place_panels(wing)) * 2,  # for now assume 1 row in tip section
+            len(SolarWing.place_panels(wing))
+            * 2,  # for now assume 1 row in tip section
         )
+
     @staticmethod
     def ncols(wing: Wing, y: float, gap=0.025):
         """y in meters"""
         return ((wing.C(y * 2 / wing.b) - gap) // pw).astype(int)
-    
+
     @staticmethod
     def place_panels(wing: Wing):
-        
         y0 = 0.02
         panels = []
         fus_joint_added = False
-        while y0 + pw < wing.b/2 and SolarWing.ncols(wing, y0+pw)[0]:
-            if y0 > 0.7 and not fus_joint_added:
+        while y0 + pw < wing.b / 2 and SolarWing.ncols(wing, y0 + pw)[0]:
+            if y0 > 0.55 and not fus_joint_added:
                 y0 += 0.03
                 fus_joint_added = True
-            for panel in range(SolarWing.ncols(wing, y0+pw)[0]):
-                x0=wing.le((y0) * 2 / wing.b)[0] + 0.015 + panel * pw
+            for panel in range(SolarWing.ncols(wing, y0 + pw)[0]):
+                x0 = wing.le((y0) * 2 / wing.b)[0] + 0.015 + panel * pw
                 panels.append((x0, y0))
             y0 += pw
 
         return panels
 
-    def plot(self, fig, row=None, col=None):
+    def plot(self, fig=None, row=None, col=None):
         fig = go.Figure() if fig is None else fig
         y = np.linspace(0, 1, 100)
         yb = y * self.wing.b / 2
@@ -150,7 +154,9 @@ class SolarWing:
                 mode="lines",
                 name="LE",
                 line=dict(color="black"),
-            ), row=row, col=col,
+            ),
+            row=row,
+            col=col,
         )
         fig.add_trace(
             go.Scatter(
@@ -159,35 +165,39 @@ class SolarWing:
                 mode="lines",
                 name="TE",
                 line=dict(color="black"),
-            ), row=row, col=col,
+            ),
+            row=row,
+            col=col,
         )
 
-        
         panels = SolarWing.place_panels(self.wing)
         for x0, y0 in panels:
             fig.add_shape(
-                xref='x', yref='y',
+                xref="x",
+                yref="y",
                 type="rect",
-                y0=x0, 
-                x0=y0, 
-                y1=x0 + pw, 
+                y0=x0,
+                x0=y0,
+                y1=x0 + pw,
                 x1=y0 + pw,
-                row=row, col=col,
+                row=row,
+                col=col,
             )
         panels = np.array(panels)
-        fig.add_trace(go.Scatter(
-            x=panels[:,1] + pw/2,
-            y=panels[:,0] + pw/2,
-            mode="text",
-            text=np.arange(len(panels))+1,
-            marker=dict(color="red", size=2),
-            name="Solar Cells",
-        ), row=row, col=col
+        fig.add_trace(
+            go.Scatter(
+                x=panels[:, 1] + pw / 2,
+                y=panels[:, 0] + pw / 2,
+                mode="text",
+                text=np.arange(len(panels)) + 1,
+                marker=dict(color="red", size=2),
+                name="Solar Cells",
+            ),
+            row=row,
+            col=col,
         )
 
-        fig = fig.update_layout(
-            yaxis=dict(scaleanchor="x", scaleratio=1)            
-        )
+        fig = fig.update_layout(yaxis=dict(scaleanchor="x", scaleratio=1))
         return fig
 
     def drag(
@@ -208,9 +218,10 @@ class SolarWing:
     def solar_power(self):
         return self.npanels * self.cell_power
 
-    def run(self, mass: npt.ArrayLike, airspeed: npt.ArrayLike, atm: Atmosphere, n: int = 50):
-        
-        odf = pd.DataFrame(dict(mass=mass, airspeed=airspeed, lift=mass*9.81))
+    def run(
+        self, mass: npt.ArrayLike, airspeed: npt.ArrayLike, atm: Atmosphere, n: int = 50
+    ):
+        odf = pd.DataFrame(dict(mass=mass, airspeed=airspeed, lift=mass * 9.81))
 
         odf = odf.assign(cl=self.aero.get_cl(atm, airspeed, odf.lift))
 
@@ -223,19 +234,44 @@ class SolarWing:
         # TODO just taking the last sload here, wont work if cl is 0.
         aero = self.aero(atm, odf.airspeed, odf.lift, sloads[-1], n=50, mode="oto")
 
-        odf = odf.merge(aero.loc[:,["wing_l", "fs_v", "Cd0"]], left_on=["lift", "airspeed"], right_on=["wing_l", "fs_v"])
-
-        odf = odf.assign(Cd = odf.CDind + odf.Cd0)
-        odf = odf.assign(
-            drag = 0.5 * atm.rho * odf.airspeed**2 * self.wing.S * odf.Cd
+        odf = odf.merge(
+            aero.loc[:, ["wing_l", "fs_v", "Cd0"]],
+            left_on=["lift", "airspeed"],
+            right_on=["wing_l", "fs_v"],
         )
 
+        odf = odf.assign(Cd=odf.CDind + odf.Cd0)
+        odf = odf.assign(drag=0.5 * atm.rho * odf.airspeed**2 * self.wing.S * odf.Cd)
+
         odf = odf.assign(
-            power = self.propulsion(atm, odf.airspeed, odf.drag),
-            solar_power = self.solar_power
+            power=self.propulsion(atm, odf.airspeed, odf.drag),
+            solar_power=self.solar_power,
         )
 
         return odf
+
+    def power_interpolator(
+        self,
+        atm: Atmosphere,
+        mass: npt.ArrayLike,
+        airspeed: npt.ArrayLike,
+        method: Literal[
+            "linear", "nearest", "slinear", "cubic", "quintic", "pchip"
+        ] = "cubic",
+        n: int = 50,
+    ):
+        indf = pd.DataFrame(
+            np.array(np.meshgrid(mass, airspeed)).reshape(2, -1).T,
+            columns=["mass", "airspeed"],
+        )
+
+        results = self.run(indf.mass, indf.airspeed, atm, n)
+
+        return RegularGridInterpolator(
+            (mass, airspeed),
+            results.power.values.reshape(len(airspeed), len(mass)).T,
+            method=method,
+        )
 
     def max_mass(
         self,
@@ -251,7 +287,81 @@ class SolarWing:
 
         odf = self.run(mass, u, atm)
 
-    
         surplus = odf.solar_power > odf.power
 
         return odf.loc[surplus].groupby("airspeed").max().mass
+
+
+@dataclass
+class SolarWingResults:
+    data: pd.DataFrame
+    power_interpolator: (
+        RegularGridInterpolator  # given mass and airspeed, calculate power
+    )
+
+    @staticmethod
+    def from_dataframe(
+        df: pd.DataFrame,
+        method: Literal[
+            "linear", "nearest", "slinear", "cubic", "quintic", "pchip"
+        ] = "cubic",
+    ):
+        mass = np.sort(df.mass.unique())
+        airspeed = np.sort(df.airspeed.unique())
+        power_interpolator = RegularGridInterpolator(
+            (mass, airspeed),
+            df.power.values.reshape(len(airspeed), len(mass)).T,
+            method=method, bounds_error=False
+        )
+
+        return SolarWingResults(
+            df,
+            power_interpolator,
+        )
+
+    @staticmethod
+    def build(
+        wing: SolarWing,
+        mass: npt.ArrayLike,
+        airspeed: npt.ArrayLike,
+        atm: Atmosphere,
+        method: Literal[
+            "linear", "nearest", "slinear", "cubic", "quintic", "pchip"
+        ] = "cubic",
+        n: int = 50,
+    ):
+        indf = pd.DataFrame(
+            np.array(np.meshgrid(mass, airspeed)).reshape(2, -1).T,
+            columns=["mass", "airspeed"],
+        )
+
+        results = wing.run(indf.mass, indf.airspeed, atm, n)
+
+        return SolarWingResults.from_dataframe(results, method)
+
+    @property
+    def masses(self):
+        return self.power_interpolator.grid[0]
+
+    @property
+    def airspeeds(self):
+        return self.power_interpolator.grid[1]
+
+    def get_mass(
+        self,
+        airspeed: npt.ArrayLike,
+        power: npt.ArrayLike,
+        kind: Literal["linear", "cubic", "quadratic"] = "quadratic",
+    ):
+        """Given airspeed and power, get max mass that can be flown"""
+        indf = pd.DataFrame(
+            np.array(np.meshgrid(self.masses, airspeed)).reshape(2, -1).T,
+            columns=["mass", "airspeed"],
+        )
+        indf = indf.assign(power=self.power_interpolator((indf.mass, indf.airspeed)))
+
+        results = indf.groupby("airspeed").apply(
+            lambda df: interp1d(df.power, df.mass, kind, bounds_error=False)(power),
+            include_groups=False,
+        )
+        return results.rename("mass").reset_index().assign(power=power).astype(float)

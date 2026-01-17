@@ -15,6 +15,7 @@ from itertools import chain
 from acdesign.avl.parse_avl_output import parse_strip_forces, parse_total_forces
 from acdesign.performance.aero import WingAero
 
+
 @dataclass
 class Wing:
     """Assumes panels are connected sequentially from root to tip"""
@@ -186,3 +187,5 @@ class Wing:
             self.b, self.S, polars, ylocs, self.C
         )
     
+    def export_geom(self, sections: list[Airfoil], file: Path):
+        pass

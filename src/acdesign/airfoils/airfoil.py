@@ -1,5 +1,6 @@
 from email.policy import HTTP
 from pathlib import Path
+import stat
 import urllib.request
 from geometry import Point, PY
 import numpy as np
@@ -45,7 +46,10 @@ class Airfoil:
                 np.append(data, np.zeros((len(data), 1)), axis=1) 
             )
         )
-
+    @staticmethod
+    def local(name: str):
+        return Airfoil.parse_selig(Path(f"src/data/uiuc/{name}.dat"))
+    
     @staticmethod
     def download(airfoilname: str, outfolder: Path = None):
         #https://m-selig.ae.illinois.edu/ads/coord_updates/la5055.dat
@@ -121,7 +125,23 @@ class Airfoil:
 
         return 0.5 * (btms + tops)
 
+    
 
+    def plot(self, fig= None, row=None, col=None):
+        import plotly.graph_objects as go
+
+        fig = fig if fig else go.Figure() 
+        fig.add_trace(
+            go.Scatter(
+                x=self.points.x,
+                y=self.points.y,
+                mode="lines",
+                name=self.name,
+                line=dict(width=2,color="black"),   
+            ), row=row, col=col
+        )
+        fig.update_layout(yaxis=dict(scaleanchor="x"))
+        return fig
 
 
 

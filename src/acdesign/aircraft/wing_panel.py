@@ -59,6 +59,7 @@ class WingPanel:
             return Cr * tiploc * (1 - np.sqrt(1 - y**2))
 
         return WingPanel(b, S, C, le)
+    
 
     @staticmethod
     def elliptical_cr(b: float, cr: float, tiploc: float = 0.25):
