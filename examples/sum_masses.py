@@ -1,4 +1,4 @@
-from acdesign.aircraft.component_mass import ComponentMass
+from acdesign.old_aircraft.component_mass import ComponentMass
 import numpy as np
 import pandas as pd
 from geometry import Point, Mass

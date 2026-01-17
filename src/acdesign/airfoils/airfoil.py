@@ -1,0 +1,148 @@
+from email.policy import HTTP
+from pathlib import Path
+import stat
+import urllib.request
+from geometry import Point, PY
+import numpy as np
+from scipy.interpolate import interp1d
+import shutil
+
+
+class Airfoil:
+    def __init__(self, name, points: Point):
+        self.name = name
+        self.points = points
+
+    def dump_selig(self, file: str | Path):
+        with open(file, "w") as f:
+            f.write(f"{self.name}\n")
+            for p in self.points:
+                f.write(f"{p.x[0]:.6f} {p.y[0]:.6f}\n")
+
+    @staticmethod
+    def parse_selig(file: str | Path):      
+                
+        with open(file) as f:
+            lines = [l.strip()  for l in f.readlines()]
+        name = lines[0]
+        lines = lines[1:]
+
+        if lines[1] == "":
+            npoints = np.array([float(v) for v in lines[0].split()]).astype("int")
+
+            lines = lines[2:]
+            
+            d1 = lines[:npoints[0]]            
+            d2 = lines[npoints[0]+1:]
+            if d1[0] == d2[0]:
+                d1 = d1[1:]
+            lines = list(reversed(d1)) + d2
+
+        data = np.array([l.split()  for l in lines]).astype(float)
+
+        return Airfoil(
+            name, 
+            Point(
+                np.append(data, np.zeros((len(data), 1)), axis=1) 
+            )
+        )
+    @staticmethod
+    def local(name: str):
+        return Airfoil.parse_selig(Path(f"src/data/uiuc/{name}.dat"))
+    
+    @staticmethod
+    def download(airfoilname: str, outfolder: Path = None):
+        #https://m-selig.ae.illinois.edu/ads/coord_updates/la5055.dat
+        name = airfoilname.lower()
+        name = name[-3] if name.endswith("-il") else name
+#            _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)            
+        try:
+            _file = urllib.request.urlretrieve(f"https://m-selig.ae.illinois.edu/ads/coord_seligFmt/{name}.dat")
+        except Exception as e:
+            print("cannot find airfoil ", airfoilname)
+            return None
+
+        if outfolder is not None:
+            if (Path(outfolder) / f"{airfoilname}.dat").exists():
+                print(f"cannot write {name} to {airfoilname}.dat, already exists")
+            else:
+                shutil.copy(_file[0], outfolder / f"{airfoilname}.dat")
+        return Airfoil.parse_selig(_file[0])
+
+    @property
+    def le_point(self):
+        return self.points[int(self.points.minloc().x)]
+
+    @property
+    def te_point(self):
+        return 0.5 * (self.points[0] + self.points[-1])
+
+    @property
+    def te_thickness(self):
+        return (self.points[0].y - self.points[-1].y)[0]
+
+    @property
+    def chord(self):
+        return self.points.x[0]
+
+    @property
+    def thickness(self):
+        return max(self.points.y) - min(self.points.y)
+
+    def set_te_thickness(self, thick:float):        
+        surfaces = -np.sign(np.gradient(self.points.x))
+
+        xunit = self.points.x / self.chord
+
+        te_diff = PY(
+            0.5 * (thick - self.te_thickness),
+            len(self.points)
+        ) * xunit * surfaces
+
+        return Airfoil(self.name, self.points + te_diff)
+
+    def set_chord(self, chord):
+        return Airfoil(self.name, self.points * chord / self.chord)
+
+    @property
+    def top_surface(self) -> Point:
+        return self.points[:self.points.minloc().x[0] + 1]
+    
+    @property
+    def btm_surface(self) -> Point:
+        return self.points[self.points.minloc().x[0]:]
+
+    def top_func(self):
+        return interp1d(self.top_surface.x, self.top_surface.y, "cubic", fill_value="extrapolate")
+
+    def btm_func(self):
+        return interp1d(self.top_surface.x, self.top_surface.y, "cubic", fill_value="extrapolate")
+
+    def mean_camber(self):
+        btms = self.btm_surface
+
+        tops = Point(btms.x, self.top_func()(btms.x), btms.z)
+
+        return 0.5 * (btms + tops)
+
+    
+
+    def plot(self, fig= None, row=None, col=None):
+        import plotly.graph_objects as go
+
+        fig = fig if fig else go.Figure() 
+        fig.add_trace(
+            go.Scatter(
+                x=self.points.x,
+                y=self.points.y,
+                mode="lines",
+                name=self.name,
+                line=dict(width=2,color="black"),   
+            ), row=row, col=col
+        )
+        fig.update_layout(yaxis=dict(scaleanchor="x"))
+        return fig
+
+
+
+

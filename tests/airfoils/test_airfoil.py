@@ -18,6 +18,9 @@ def test_parse_selig(affile):
 
     assert isinstance(af.points, Point)
 
+
+
+
 def test_parse_the_otherone(affile2):
     af = Airfoil.parse_selig(affile2)
     assert isinstance(af.points, Point)

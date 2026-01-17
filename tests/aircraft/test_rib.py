@@ -1,8 +1,8 @@
 from pytest import fixture, approx
 from geometry import Point
 import numpy as np
-from acdesign.aircraft.rib import Rib
-from acdesign.aircraft.panel import Panel
+from acdesign.old_aircraft.rib import Rib
+from acdesign.old_aircraft.panel import Panel
 
 _rib = {
     "airfoil": "a18-il",
