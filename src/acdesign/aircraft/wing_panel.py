@@ -1,3 +1,4 @@
+from logging import root
 from typing import Callable
 import numpy as np
 import numpy.typing as npt
@@ -8,11 +9,30 @@ from acdesign.airfoils.airfoil import Airfoil
 
 
 @dataclass
+class ControlSurface:
+    name: str
+    root_prop: float
+    tip_prop: float
+    y_root: float = 0
+    y_tip: float = 1
+    sdup: float = 1.0
+
+@dataclass
 class WingPanel:
     b: float  # wingspan
     S: float  # wing area
     C: Callable[[npt.ArrayLike], npt.ArrayLike]
     le: Callable[[npt.ArrayLike], npt.ArrayLike]
+    controls: list[ControlSurface] = None
+
+    def add_control(self, control: ControlSurface):
+        return WingPanel(
+            self.b,
+            self.S,
+            self.C,
+            self.le,
+            controls=[*self.controls, control] if self.controls else [control],
+        )
 
     @property
     def AR(self):

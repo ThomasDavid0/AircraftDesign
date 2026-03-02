@@ -19,7 +19,6 @@ from acdesign.performance.aero import WingAero
 @dataclass
 class Wing:
     """Assumes panels are connected sequentially from root to tip"""
-
     panels: list[WingPanel]
 
     @property
@@ -111,12 +110,13 @@ class Wing:
 
         for i in range(len(ylocs)):
             odata += kwdict["SECTION"](le[i], y[i], 0, C[i], 0)
-            Airfoil.parse_selig(
-                "src/data/uiuc/" + sections[i].name + ".dat"
-            ).dump_selig(f"avl/{sections[i].name}.dat")
+            if not sections == "flat":
+                Airfoil.parse_selig(
+                    "src/data/uiuc/" + sections[i].name + ".dat"
+                ).dump_selig(f"avl/{sections[i].name}.dat")
 
-            if sections != "flat":
-                odata += kwdict["AFILE"](None, None, sections[i].name + ".dat")
+                if sections != "flat":
+                    odata += kwdict["AFILE"](None, None, sections[i].name + ".dat")
         return odata
 
     def avl_header(self):
