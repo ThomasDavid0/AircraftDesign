@@ -1,85 +1,129 @@
-from acdesign.old_aircraft import Rib, Panel
-from acdesign.old_aircraft.wing import Wing
-from geometry import Point
-from .conftest import _panel
+from pytest import approx, fixture, mark
 import numpy as np
-from pytest import approx, fixture
+from acdesign.aircraft.wing_panel import WingPanel, ControlSurface
+from acdesign.aircraft.wing import Wing
+from acdesign.aircraft.wings import PlacedWing, Wings
+from acdesign.airfoils.airfoil import Airfoil, InterpolatedAirfoil
+from tests.performance.conftest import wing
 
 
-@fixture
-def ribs():
-    return [
-        Rib.create("e174-il", 200, Point(0,   0,   0), 1),
-        Rib.create("e174-il", 200, Point(0,   80,  0), 1),
-        Rib.create("e174-il", 180, Point(20,  180, 0), 1),
-        Rib.create("e174-il", 160, Point(40,  400, 0), 1),
-        Rib.create("e174-il", 100, Point(100, 800, 0), 1),
-    ]
-
-def test_from_ribs(ribs):
-    wing = Wing.from_ribs(ribs)
-    assert len(wing.panels) == 4
-    assert wing.panels[1].transform.translation == Point(0, 80, 0)
-    assert wing.panels[1].inbd.transform.translation == Point(0, 0, 0)
-    assert wing.panels[1].otbd.transform.translation == Point(20, 100, 0)
+def test_create_trapezoidal_panel_geometry():
+    wingpanel = WingPanel.trapz_crct(1.0, 0.3, 0.3, 0.25)
+    assert wingpanel.b == 1.0
+    assert wingpanel.S == 0.3
+    assert wingpanel.C(0) == 0.3
+    assert wingpanel.C(0.5, value=True) == 0.3
+    assert wingpanel.C(1) == 0.3
+    assert wingpanel.le(0) == 0
+    assert wingpanel.le(1) == 0
 
 
-def test_S(_panel):
-    assert Wing([_panel]).S == 500 * 300 * 2
+def test_get_straight_tapered_panel_hinge_location():
+    wingpanel = WingPanel.trapz_crct(
+        1.0, 0.3, 0.2, 0.25, control=ControlSurface("flap", 0.2, 0.3, 1.0)
+    )
 
-def test_b(_panel):
-    assert Wing([_panel]).b == 600 * 2
-
-def test_scale(ribs):
-    wing = Wing.from_ribs(ribs)
-    swing = wing.scale(2)
-    assert swing.b == wing.b * 2
-    assert swing.S == approx((np.sqrt(wing.S) * 2)**2)
-
-def test_mean_chord(ribs):
-    wing = Wing.from_ribs(ribs)
-    assert wing.SMC == 155.5
+    assert wingpanel.get_xhinge(0.5) == approx(0.75)
+    assert wingpanel.get_xhinge(0.0) == approx(0.8)
+    assert wingpanel.get_xhinge(1.0) == approx(0.7)
 
 
-# TODO need an independent check of these
-def test_MAC(ribs):
-    wing = Wing.from_ribs(ribs)
-    assert wing.MAC == approx(161.243301178992)
+@mark.skip(
+    reason="This test will only work with nonzero ct, which is not currently implemented"
+)
+def test_get_elliptical_panel_hinge_location():
+    wingpanel = WingPanel.elliptical_cr(
+        1.0, 0.3, 0.1, control=ControlSurface("flap", 0.2, 0.3, 1.0)
+    )
 
-def test_pMAC(ribs):
-    wing = Wing.from_ribs(ribs)
-    assert wing.pMAC.y[0] == approx(234.016613076)
-
-
-
-
-@fixture
-def buddi():
-    return Wing.double_taper("wing", 3500, 0.85*1e6, 0.6, 100, ["fx63137-il","fx63137-il","mh32-il","mh32-il"], [0,0,0,0], gap=0)
+    assert wingpanel.get_xhinge(0.0) == approx(0.8)
+    assert wingpanel.get_xhinge(1.0) == approx(0.7)
 
 
-def test_double_taper(buddi):
+def test_get_exact_airfoil_at_spanwise_location():
+    panel = WingPanel.trapz_crct(
+        1, 0.3, 0.2, airfoils={0: Airfoil.parse_selig("tests/data/goe222.dat")}
+    )
+    assert panel.get_airfoil(0.5).name == "GOE 222 (MVA H.33) AIRFOIL"
+
+
+def test_get_interpolated_airfoil_at_spanwise_location():
+    panel = WingPanel.trapz_crct(
+        1,
+        0.3,
+        0.2,
+        airfoils={
+            0: Airfoil.parse_selig("tests/data/rae101.dat"),
+            1: Airfoil.parse_selig("tests/data/e168.dat"),
+        },
+    )
+    af = panel.get_airfoil(0.5)
+    assert isinstance(af, InterpolatedAirfoil)
+    assert af.inbd.name == "RAE 101 AIRFOIL"
+    assert af.otbd.name == "E168  (12.45%)"
+
+
+def test_wingpanel_create_avl_ribs():
+    wingpanel = WingPanel.trapz_crct(
+        1.0, 0.3, 0.2, 0.25, 
+        control=ControlSurface("flap", 0.2, 0.3, 1.0),
+        airfoils={
+            0: Airfoil.parse_selig("tests/data/rae101.dat"),
+            1: Airfoil.parse_selig("tests/data/e168.dat"),
+        },
+    )
+
+    avl_ribs = wingpanel.create_avl_ribs()
+
+    assert sum(np.array(avl_ribs) == "SECTION") == 2
     
-    assert buddi.tr == 0.6
-    l=0.6
 
-    assert buddi.S == approx(0.85*1e6)
-    assert buddi.b == approx(3500) 
-    assert buddi.AR == buddi.b**2 / buddi.S
-    i=buddi.panels[0]
-    o = buddi.panels[1]
-    assert buddi.MAC == 2*(i.MAC * i.area + o.MAC * o.area) / buddi.S 
-
-    assert buddi.pMAC.y == (i.pMAC.y * i.area + (o.y + o.pMAC.y) * o.area) / (buddi.S * 0.5)
-
-    assert buddi.panels[0].SMC == approx(286.9760155574762)
-    assert buddi.panels[0].root.chord == approx(286.9760155574762)
-
-    #assert buddi.pMAC.x == buddi.pMAC.y * o.le_sweep_distance / (buddi.b * 0.5)
+@fixture
+def dtwing():
+    return Wing(
+        "test_wing",
+        [
+            WingPanel.trapz_crct(1.0, 0.3, 0.3, 0.25),
+            WingPanel.trapz_crct(1.0, 0.3, 0.2, 0.25),
+        ],
+    )
 
 
-def test_from_panels():
-    p1 = Panel.simple("test", 500, 100, Rib.simple("rae101-il", 100, 5), Rib.simple("rae101-il", 50, 5))
-    p2 = Panel.simple("test", 500, 100, Rib.simple("rae101-il", 50, 5), Rib.simple("rae101-il", 50, 5))
-    w = Wing.from_panels([p1, p2])
-    assert w.b == 2000
+def test_retrieves_the_correct_panel_and_spanwise_location(dtwing: Wing):
+    id, yloc = dtwing.get_panel(0.25)
+    assert id == 0
+    assert yloc == 0.5
+
+    id, yloc = dtwing.get_panel(0.5)
+    assert id == 0
+    assert yloc == 1.0
+
+    id, yloc = dtwing.get_panel(0.5, otbd=True)
+    assert id == 1
+    assert yloc == 0.0
+
+    results = dtwing.get_panel([0, 0.5, 1.0])
+    assert results == [(0, 0.0), (0, 1.0), (1, 1.0)]
+
+
+def test_gets_chord_at_spanwise_location(dtwing: Wing):
+    assert dtwing.C(0) == 0.3
+    assert dtwing.C([0, 0.5, 1.0]) == [0.3, 0.3, 0.2]
+    assert dtwing.C([0, 0.5, 1.0]) == [0.3, 0.3, 0.2]
+
+
+@fixture
+def stepwing():
+    return Wing(
+        "test_wing",
+        [
+            WingPanel.trapz_crct(1.0, 0.3, 0.3, 0.25),
+            WingPanel.trapz_crct(1.0, 0.2, 0.2, 0.25),
+        ],
+    )
+
+
+def test_gets_chord_at_spanwise_location_stepped(stepwing: Wing):
+    assert stepwing.C(0.5) == 0.3
+
+    assert stepwing.C(0.5, otbd=True) == 0.2

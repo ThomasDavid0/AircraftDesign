@@ -1,4 +1,3 @@
-from unittest import result
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -9,7 +8,6 @@ from .operating_point import OperatingPoint
 from acdesign.airfoils.polar import UIUCPolar
 from typing import Callable, Literal
 from scipy.optimize import minimize, Bounds
-from acdesign.old_aircraft import Wing
 from dataclasses import dataclass
 
 

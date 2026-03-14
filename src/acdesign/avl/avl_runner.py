@@ -1,5 +1,6 @@
 import subprocess
 from pathlib import Path
+from acdesign.environment import AVL_PROGRAM, AVL_WORKSPACE
 
 
 def run_avl(commands: list[str]) -> None:
@@ -10,11 +11,11 @@ def run_avl(commands: list[str]) -> None:
     """
 
     process = subprocess.Popen(
-        "./avl",
+        AVL_PROGRAM,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        cwd=Path("avl"),
+        cwd=Path(AVL_WORKSPACE),
     )
     process.stdin.write("\n".join(commands).encode())
     output, error = process.communicate()

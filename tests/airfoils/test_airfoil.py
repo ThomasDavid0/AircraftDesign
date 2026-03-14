@@ -1,6 +1,4 @@
-
-from acdesign.airfoils.airfoil import Airfoil
-import numpy as np
+from acdesign.airfoils.airfoil import Airfoil, InterpolatedAirfoil
 import pytest
 from geometry import Point
 
@@ -17,8 +15,6 @@ def test_parse_selig(affile):
     af = Airfoil.parse_selig(affile)
 
     assert isinstance(af.points, Point)
-
-
 
 
 def test_parse_the_otherone(affile2):
@@ -72,9 +68,25 @@ def test_top_btm_surface(foil):
     assert bsurf[0] == foil.le_point
 
 
-def test_mean_camber(foil):
-    meanc = foil.mean_camber()
+def test_mean_camber(foil: Airfoil):
+    meanc = foil.mean_camber
     assert meanc[0] == foil.le_point
     assert meanc[-1] == foil.te_point
 
-    
+def test_flat_airfoil():
+    af = Airfoil.flat()
+    assert af.te_point == Point(1,0,0)
+    assert af.le_point == Point(0,0,0)
+
+@pytest.fixture
+def ifoil():
+    return InterpolatedAirfoil(
+        Airfoil.parse_selig("tests/data/rae101.dat"),
+        Airfoil.parse_selig("tests/data/e168.dat"),
+        0.5
+    )
+
+def test_interpolated_airfoil_points(ifoil: InterpolatedAirfoil):
+    pts = ifoil.points
+    assert isinstance(pts, Point)
+    assert len(pts) == len(ifoil.inbd.points)
