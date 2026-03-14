@@ -22,47 +22,36 @@ aircraft = Aircraft(
                     "btm_wing",
                     g.Point(0.0, 0, -0.2),
                     [
-                        WingPanel.trapz_crct(
-                            0.25,
-                            0.3,
-                            0.3,
-                            control=ControlSurface("flap", 0.3, 0.3, sdup=1.0),
-                        ),
-                        WingPanel.trapz_crct(
-                            0.75,
-                            0.3,
-                            0.15,
-                            control=ControlSurface("aileron", 0.3, 0.4, sdup=-1.0),
-                        ),
+                        WingPanel.trapz_crct( 0.5, 0.3, 0.3, control=ControlSurface("flap", 0.3, 0.3, sdup=1.0)),
+                        WingPanel.trapz_crct( 1.5, 0.3, 0.15, control=ControlSurface("aileron", 0.3, 0.4, sdup=-1.0)),
                     ],
                 ),
                 Wing(
                     "top_wing",
                     g.Point(0.0, 0, 0.2),
                     [
-                        WingPanel.trapz_crct(
-                            0.25,
-                            0.3,
-                            0.3,
-                            control=ControlSurface("flap", 0.3, 0.3, sdup=1.0),
-                        ),
-                        WingPanel.trapz_crct(
-                            0.75,
-                            0.3,
-                            0.15,
-                            control=ControlSurface("aileron", 0.3, 0.4, sdup=-1.0),
-                        ),
+                        WingPanel.trapz_crct( 0.5, 0.3, 0.3, control=ControlSurface("flap", 0.3, 0.3, sdup=1.0)),
+                        WingPanel.trapz_crct( 1.5, 0.3, 0.15, control=ControlSurface("aileron", 0.3, 0.4, sdup=-1.0)),
                     ],
                 ),
                 Wing(
-                    "side_wing",
+                    "right_wing",
                     g.Point(0.0, 0.25, 0.4),
                     [
-                        WingPanel.trapz_crct(0.2, 0.25, 0.35, dihedral=np.radians(-90)),
-                        WingPanel.trapz_crct(0.4, 0.35, 0.35, dihedral=np.radians(-90)),
-                        WingPanel.trapz_crct(0.2, 0.35, 0.25, dihedral=np.radians(-90)),
+                        WingPanel.trapz_crct(0.2, 0.25, 0.35, dihedral=np.radians(-90), sym=False),
+                        WingPanel.trapz_crct(0.4, 0.35, 0.35, dihedral=np.radians(-90), sym=False),
+                        WingPanel.trapz_crct(0.2, 0.35, 0.25, dihedral=np.radians(-90), sym=False),
                     ],
-                ).set_control(ControlSurface("sflap", 0.3, 0.3, sdup=-1.0)),
+                ).set_control(ControlSurface("sflap", 0.3, 0.3)),
+                Wing(
+                    "left_wing",
+                    g.Point(0.0, -0.25, 0.4),
+                    [
+                        WingPanel.trapz_crct(0.2, 0.25, 0.35, dihedral=np.radians(-90), sym=False),
+                        WingPanel.trapz_crct(0.4, 0.35, 0.35, dihedral=np.radians(-90), sym=False),
+                        WingPanel.trapz_crct(0.2, 0.35, 0.25, dihedral=np.radians(-90), sym=False),
+                    ],
+                ).set_control(ControlSurface("sflap", 0.3, 0.3)),
             ],
         ),
         Wings(
@@ -72,39 +61,30 @@ aircraft = Aircraft(
                     "btm_tail",
                     g.Point(0, 0, -0.25),
                     [
-                        WingPanel.trapz_crct(
-                            0.25,
-                            0.2,
-                            0.2,
-                            control=ControlSurface("elevator", 0.3, 0.3, sdup=1.0),
-                        )
+                        WingPanel.trapz_crct( 0.5, 0.2, 0.2)
                     ],
-                ),
+                ).set_control(ControlSurface("elevator", 0.3, 0.3, sdup=1.0)),
                 Wing(
                     "top_tail",
                     g.Point(0, 0, 0.25),
                     [
-                        WingPanel.trapz_crct(
-                            0.25,
-                            0.2,
-                            0.2,
-                            control=ControlSurface("elevator", 0.3, 0.3, sdup=1.0),
-                        )
+                        WingPanel.trapz_crct( 0.5, 0.2, 0.2)
                     ],
-                ),
+                ).set_control(ControlSurface("elevator", 0.3, 0.3, sdup=1.0)),
                 Wing(
-                    "fin",
+                    "right_fin",
                     g.Point(0, 0.25, 0.25),
                     [
-                        WingPanel.trapz_crct(
-                            0.5,
-                            0.2,
-                            0.2,
-                            dihedral=np.radians(-90),
-                            control=ControlSurface("rudder", 0.3, 0.3, sdup=-1.0),
-                        )
+                        WingPanel.trapz_crct( 0.5, 0.2, 0.2, dihedral=np.radians(-90), sym=False)
                     ],
-                ),
+                ).set_control(ControlSurface("rudder", 0.3, 0.3, sdup=-1.0)),
+                Wing(
+                    "left_fin",
+                    g.Point(0, -0.25, 0.25),
+                    [
+                        WingPanel.trapz_crct( 0.5, 0.2, 0.2, dihedral=np.radians(-90), sym=False)
+                    ],
+                ).set_control(ControlSurface("rudder", 0.3, 0.3, sdup=-1.0))
             ],
         ),
     ],

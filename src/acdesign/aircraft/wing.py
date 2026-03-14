@@ -21,7 +21,6 @@ import geometry as g
 @dataclass
 class Wing:
     """
-    Represents a single surface in AVL.
     Comprises a list of panels connected sequentially from root to tip.
     """
     name: str
@@ -34,6 +33,7 @@ class Wing:
         self.ys = self.bs.cumsum() / self.b
         self.ybs = self.bs / self.b
 
+        self.Xs = np.array([p.le(1) for p in self.panels]).cumsum()
         self.Ys = np.array([p.Y(1) for p in self.panels]).cumsum()
         self.Zs = np.array([p.Z(1) for p in self.panels]).cumsum()
 
@@ -137,7 +137,7 @@ class Wing:
         if pd.api.types.is_list_like(y):
             return y.__class__(self.C(yi, otbd, value) for yi in y)
         panel_id, panel_y = self.get_panel(y, otbd, value)
-        return self.panels[panel_id].le(panel_y)
+        return self.panels[panel_id].le(panel_y) + self.Xs[panel_id-1] if panel_id > 0 else 0
 
     def y(
         self, y: Iterable | float, otbd: bool = False, value: bool = False
@@ -145,7 +145,7 @@ class Wing:
         if pd.api.types.is_list_like(y):
             return y.__class__(self.C(yi, otbd, value) for yi in y)
         panel_id, panel_y = self.get_panel(y, otbd, value)
-        return self.panels[panel_id].y(panel_y)
+        return self.panels[panel_id].y(panel_y) + self.Ys[panel_id-1] if panel_id > 0 else 0
 
     def plot(
         self,
@@ -159,30 +159,19 @@ class Wing:
         origin = self.offset + (shift or g.P0())
         for panel in self.panels:
             panel.plot_3d(npoints, origin, fig)
+            if panel.sym:
+                panel.plot_3d(npoints, origin, fig, sym=True)
             origin += panel.le_point(1.0)
         return fig
 
     def dump_avl(self, component: int = None, translate: g.Point = None):
 
         odata = [""]
-        odata += kwdict["SURFACE"](self.name, 12, 1.0, 20, 1.0)
-
-        if component is not None:
-            odata += kwdict["COMPONENT"](component)
-
-        if self.sym:
-            odata += kwdict["YDUPLICATE"](0.0)
-
-        translate = (translate or g.Point(0, 0, 0)) + self.offset
     
-        odata += kwdict["TRANSLATE"](
-            translate.x[0], translate.y[0], translate.z[0]
-        )
-
-        shift = g.P0()
         for i, p in enumerate(self.panels):
-            odata += p.create_avl_ribs(shift)
-            shift = shift + p.le_point(1.0)
+            pstart = g.Point(self.Xs[i-1], self.Ys[i-1], self.Zs[i-1]) if i > 0 else g.P0()
+            pstart = pstart + (translate or g.P0()) + self.offset
+            odata += p.create_avl_surface(pstart, component, name=f"{self.name}_panel_{i}")       
 
         return odata
 

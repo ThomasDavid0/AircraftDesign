@@ -1,8 +1,9 @@
 from pytest import approx, fixture, mark
 import numpy as np
+import geometry as g
 from acdesign.aircraft.wing_panel import WingPanel, ControlSurface
 from acdesign.aircraft.wing import Wing
-from acdesign.aircraft.wings import PlacedWing, Wings
+from acdesign.aircraft.wings import Wings
 from acdesign.airfoils.airfoil import Airfoil, InterpolatedAirfoil
 from tests.performance.conftest import wing
 
@@ -82,6 +83,7 @@ def test_wingpanel_create_avl_ribs():
 def dtwing():
     return Wing(
         "test_wing",
+        g.P0(),
         [
             WingPanel.trapz_crct(1.0, 0.3, 0.3, 0.25),
             WingPanel.trapz_crct(1.0, 0.3, 0.2, 0.25),
@@ -116,6 +118,7 @@ def test_gets_chord_at_spanwise_location(dtwing: Wing):
 def stepwing():
     return Wing(
         "test_wing",
+        g.P0(),
         [
             WingPanel.trapz_crct(1.0, 0.3, 0.3, 0.25),
             WingPanel.trapz_crct(1.0, 0.2, 0.2, 0.25),
@@ -127,3 +130,28 @@ def test_gets_chord_at_spanwise_location_stepped(stepwing: Wing):
     assert stepwing.C(0.5) == 0.3
 
     assert stepwing.C(0.5, otbd=True) == 0.2
+
+@fixture
+def neg_tr_panel():
+    return WingPanel.trapz_crct(1.0, 0.2, 0.3, 1.00, control=ControlSurface("flap", 0.2, 0.3, -1.0))
+
+def test_neg_tr_tip_le_is_neg_x(neg_tr_panel: WingPanel):
+    assert neg_tr_panel.le(1.0) == approx(-0.1)
+
+
+@fixture
+def fullwing():
+    return Wing(
+        "test_wing",
+        g.P0(),
+        [
+            WingPanel.trapz_crct(1.0, 0.2, 0.3, 1.00),
+            WingPanel.trapz_crct(1.0, 0.3, 0.3, 1.00),
+            WingPanel.trapz_crct(1.0, 0.3, 0.2, 1.00),
+        ],
+    )
+
+def test_panel_le_points(fullwing: Wing):
+    assert fullwing.le(0) == 0
+    assert fullwing.le(0.5) == approx(-0.1)
+    assert fullwing.le(1.0) == 0

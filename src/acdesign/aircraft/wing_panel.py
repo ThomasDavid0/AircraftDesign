@@ -1,9 +1,8 @@
 from json import dumps
 
 from acdesign import AVL_WORKSPACE
-from importlib.metadata import files
 from pathlib import Path
-from typing import Callable, Literal, overload
+from typing import Callable, overload
 import numpy as np
 import numpy.typing as npt
 import plotly.graph_objects as go
@@ -24,8 +23,9 @@ class ControlSurface:
 
 @dataclass
 class WingPanel:
-    """Represents a single straight taper or elliptical section of a wing, with one full span control surface.
-    wing defined from root to tip, or left to right if sym==False.
+    """Represents a single straight taper or elliptical section of a wing, with one full span 
+    control surface. Wing defined from root to tip, or left to right if sym==False.
+    Represents a single surface in AVL.
 
     Attributes:
         b: Wingspan along the panel (not necessarily horizontal).
@@ -90,7 +90,7 @@ class WingPanel:
     def y(self, y: FloatArrayT | float, value: bool = False) -> FloatArrayT | float:
         """get panel local y location at spanwise location or distance along panel"""
         y = self.get_y(y, value)
-        return y * self.b
+        return y * self.b * (0.5 if self.sym else 1.0)
 
     def dihedral_rotation(self) -> g.Quaternion:
         return g.Quaternion.from_euler(g.PX(self.dihedral))
@@ -119,7 +119,7 @@ class WingPanel:
         return self._le(self.get_y(y, value))
 
     def le_point(self, y: float | FloatArrayT) -> g.Point:
-        return g.Point(-self.le(y), self.Y(y), self.Z(y))
+        return g.Point(self.le(y), self.Y(y), self.Z(y))
 
     def te_point(self, y: float | FloatArrayT) -> g.Point:
         return g.Point(-self.le(y) - self.C(y), self.Y(y), self.Z(y))
@@ -200,27 +200,37 @@ class WingPanel:
 
         return (wx_hinge_y - self.le(y)) / self.C(y)
 
-    def create_avl_ribs(self, shift: g.Point = None):
+    def create_avl_surface(self, shift: g.Point = None, component_id: int = 1, name: str = None):
         shift = shift or g.P0()
         odata = []
 
-        le = (
+        odata = [""]
+        odata += kwdict["SURFACE"](name, 12, 1.0, 20, 1.0)
+
+        if component_id is not None:
+            odata += kwdict["COMPONENT"](component_id)
+
+        if self.sym:
+            odata += kwdict["YDUPLICATE"](0.0)
+
+        odata += kwdict["TRANSLATE"](
+            shift.x[0], shift.y[0], shift.z[0]
+        )
+
+        le_points = (
             g.Point(
                 self.le(self.all_ribs), self.Y(self.all_ribs), self.Z(self.all_ribs)
             )
-            + shift
         )
         C = self.C(self.all_ribs)
 
         for i, y in enumerate(self.all_ribs):
-            odata += kwdict["SECTION"](le.x[i], le.y[i], le.z[i], C[i], 0)
+            odata += kwdict["SECTION"](le_points.x[i], le_points.y[i], le_points.z[i], C[i], 0)
 
             airfoil = self.get_airfoil(y)
-            if isinstance(airfoil, Airfoil) and airfoil.name == "flat":
-                continue
-            airfoil.dump_selig(Path(AVL_WORKSPACE) /  f"{airfoil.name}.dat")
-
-            odata += kwdict["AFILE"](None, None, f"{airfoil.name}.dat")
+            if not airfoil.name == "flat":
+                airfoil.dump_selig(Path(AVL_WORKSPACE) /  f"{airfoil.name}.dat")
+                odata += kwdict["AFILE"](None, None, f"{airfoil.name}.dat")
 
             if self.control is not None:
                 odata += kwdict["CONTROL"](
@@ -298,14 +308,15 @@ class WingPanel:
             )
         return fig.update_layout(yaxis=dict(scaleanchor="x"))
 
-    def plot_3d(self, npoints: int = 100, shift: g.Point = None, fig=None):
+    def plot_3d(self, npoints: int = 100, shift: g.Point = None, fig=None, sym=False):
+
         fig = go.Figure() if fig is None else fig
         y = np.linspace(0, 1, npoints)
         shift = shift or g.P0()
         fig.add_trace(
             go.Scatter3d(
                 x=self.le(y) + shift.x,
-                y=self.Y(y) + shift.y,
+                y=(self.Y(y) + shift.y) * (-1 if sym else 1),
                 z=self.Z(y) + shift.z,
                 mode="lines",
                 name="Leading Edge",
@@ -315,7 +326,7 @@ class WingPanel:
         fig.add_trace(
             go.Scatter3d(
                 x=self.le(y) + self.C(y) + shift.x,
-                y=self.Y(y) + shift.y,
+                y=(self.Y(y) + shift.y) * (-1 if sym else 1),
                 z=self.Z(y) + shift.z,
                 mode="lines",
                 name="Trailing Edge",
@@ -327,7 +338,7 @@ class WingPanel:
             fig.add_trace(
                 go.Scatter3d(
                     x=self.le(y) + self.get_xhinge(y) * self.C(y) + shift.x,
-                    y=self.Y(y) + shift.y,
+                    y=(self.Y(y) + shift.y) * (-1 if sym else 1),
                     z=self.Z(y) + shift.z,
                     mode="lines",
                     name=f"{self.control.name} hinge",
@@ -348,7 +359,7 @@ class WingPanel:
             fig.add_trace(
                 go.Scatter3d(
                     x=afpoints.x,
-                    y=afpoints.y,
+                    y=afpoints.y * (-1 if sym else 1),
                     z=afpoints.z,
                     mode="lines",
                     name=f"Airfoil{_y}",
@@ -363,7 +374,7 @@ class WingPanel:
             fig.add_trace(
                 go.Scatter3d(
                     x=afmcpoints.x,
-                    y=afmcpoints.y,
+                    y=afmcpoints.y * (-1 if sym else 1),
                     z=afmcpoints.z,
                     mode="lines",
                     name=f"Mean Camber{_y}",
@@ -379,7 +390,7 @@ class WingPanel:
             fig.add_trace(
                 go.Scatter3d(
                     x=afoil.x,
-                    y=afoil.y,
+                    y=afoil.y * (-1 if sym else 1),
                     z=afoil.z,
                     mode="lines",
                     name=f"Airfoil{_y}",
@@ -395,7 +406,7 @@ class WingPanel:
             fig.add_trace(
                 go.Scatter3d(
                     x=af_mc.x,
-                    y=af_mc.y,
+                    y=af_mc.y * (-1 if sym else 1),
                     z=af_mc.z,
                     mode="lines",
                     name=f"Mean Camber{_y}",
