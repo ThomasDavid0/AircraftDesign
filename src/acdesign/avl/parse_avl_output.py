@@ -28,18 +28,17 @@ def parse_strip_forces(file: Path, b: float) -> pd.DataFrame:
     return make_interp_spline(df.Yle * 2 / b, df.c_cl, k=3)
 
 
-def parse_total_forces(file: Path) -> NamedTuple:
-    """Parse AVL total forces output file into a named tuple."""
+def parse_avl_out_data(file: Path, start: str, stop="-"*50):
     with Path(file).open("r") as f:
-
         data = {}
+        while not f.readline().startswith(start):
+            pass
         for line in f.readlines():
-            line = line.strip(" -")
-            if line == "":
+            if line == "" or "=" not in line:
                 continue
-            if "=" not in line:
-                continue
-            
+            if stop in line:
+                break
+
             entries = line.strip().split()
             if len(entries) < 3:
                 continue
@@ -49,5 +48,18 @@ def parse_total_forces(file: Path) -> NamedTuple:
                         data[key] = float(value)
                     except ValueError:  
                         data[key] = value
-            #lines.append(f.readline().strip())
     return data
+
+def parse_total_forces(file: Path) -> dict:
+    """Parse AVL total forces output file into a named tuple."""
+    return parse_avl_out_data(
+        file,
+        " Vortex Lattice Output -- Total Forces"
+    )
+
+
+def parse_stability_derivatives(file:Path) ->NamedTuple:
+    return parse_avl_out_data(
+        file,
+        " Stability-axis derivatives...",
+    )

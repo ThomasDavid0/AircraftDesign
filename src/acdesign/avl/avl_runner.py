@@ -3,7 +3,7 @@ from pathlib import Path
 from acdesign.environment import AVL_PROGRAM, AVL_WORKSPACE
 
 
-def run_avl(commands: list[str]) -> None:
+def run_avl(commands: list[str], process: subprocess.Popen = None) -> None:
     """Run AVL with the specified commands.
 
     Args:
@@ -17,13 +17,13 @@ def run_avl(commands: list[str]) -> None:
         stderr=subprocess.PIPE,
         cwd=Path(AVL_WORKSPACE),
     )
+    
     process.stdin.write("\n".join(commands).encode())
+
     output, error = process.communicate()
     if error:
         raise RuntimeError(f"AVL Error: {error.decode()}")
     return output
-
-
 
 
 if __name__ == "__main__":

@@ -19,7 +19,8 @@ class Aircraft:
         self.S = self.components[self.ref_wing].S
         self.b = self.components[self.ref_wing].b
         self.C = self.components[self.ref_wing].C
-
+        _controls = {p.control.name: "D" for c in self.components for w in c.wings for p in w.panels}
+        self.controls = {k: f"D{i+1}" for i, k in enumerate(_controls.keys())}
     def plot(self, npoints: int = 100, shift: g.Point = None, fig = None, mode="lines"):
         import plotly.graph_objects as go
         fig = fig or go.Figure()
@@ -36,3 +37,5 @@ class Aircraft:
         )[1:]
         avl_components = list(chain(*[c.avl_component(i+1) for i, c in enumerate(self.components)]))
         return avl_header + avl_components
+    
+
