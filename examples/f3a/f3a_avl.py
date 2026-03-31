@@ -1,12 +1,8 @@
-from ast import parse
 from pathlib import Path
-from turtle import setup
-
 import geometry as g
 from loguru import logger
 import numpy as np
 import pandas as pd
-from yaml import unsafe_load
 
 from acdesign import AVL_WORKSPACE
 from acdesign.aircraft import Wings
@@ -16,9 +12,7 @@ from acdesign.aircraft.wing_panel import ControlSurface, WingPanel
 from acdesign.avl.avl_runner import run_avl
 from acdesign.avl.parse_avl_output import (
     parse_total_forces,
-    parse_stability_derivatives,
 )
-from itertools import chain
 
 
 aircraft = Aircraft(
@@ -230,5 +224,5 @@ for case, (cly, roll_angle) in unflapped_cases.items():
     )
 
 
-pd.DataFrame(flapped_results).to_csv(Path("f3a_avl_flapped_results.csv"))
-pd.DataFrame(unflapped_results).to_csv(Path("f3a_avl_unflapped_results.csv"))
+pd.DataFrame(flapped_results).to_csv(Path("examples/f3a/f3a_avl_flapped_results.csv"))
+pd.DataFrame(unflapped_results).to_csv(Path("examples/f3a/f3a_avl_unflapped_results.csv"))

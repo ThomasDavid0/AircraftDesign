@@ -8,8 +8,8 @@ app = marimo.App()
 def _():
     import pandas as pd
 
-    flapped_results = pd.read_csv("../../f3a_avl_flapped_results.csv", index_col=0)
-    unflapped_results = pd.read_csv("../../f3a_avl_unflapped_results.csv", index_col=0)
+    flapped_results = pd.read_csv("f3a_avl_flapped_results.csv", index_col=0)
+    unflapped_results = pd.read_csv("f3a_avl_unflapped_results.csv", index_col=0)
     flapped_results
     return flapped_results, unflapped_results
 
