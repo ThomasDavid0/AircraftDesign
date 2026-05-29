@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from turtle import st
 from typing import Literal
 
 from acdesign.aircraft.wing import Wing
