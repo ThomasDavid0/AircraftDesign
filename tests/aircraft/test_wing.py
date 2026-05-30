@@ -6,7 +6,7 @@ from acdesign.aircraft.wing import Wing
 from acdesign.aircraft.wings import Wings
 from acdesign.airfoils.airfoil import Airfoil, InterpolatedAirfoil
 from tests.performance.conftest import wing
-
+``
 
 def test_create_trapezoidal_panel_geometry():
     wingpanel = WingPanel.trapz_crct(1.0, 0.3, 0.3, 0.25)

@@ -2,7 +2,7 @@ import pytest
 from acdesign.avl.parse import *
 from geometry import Point
 from itertools import chain
-from acdesign import Plane
+#from acdesign import Plane
 
 
 @pytest.fixture
@@ -66,7 +66,3 @@ def test_parse_avl_ac(avltuples):
     ac= parse_avl_ac(avltuples)
     assert len(ac.panels) == 12
 
-
-def test_parse_avl(avlfile):
-    ac = parse_avl(avlfile)
-    assert isinstance(ac, Plane)

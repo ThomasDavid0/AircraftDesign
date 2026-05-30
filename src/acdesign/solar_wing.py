@@ -108,8 +108,8 @@ class SolarWing:
 
         wing = Wing(
             [
-                WingPanel.trapezoidal(b1, b1 * C, 1),
-                WingPanel.elliptical_cr(b2, C, 0.25),
+                WingPanel.trapezoidal(b1, b1 * C, 1, section={0:section}),
+                WingPanel.elliptical_cr(b2, C, 0.25, section={0:section}),
             ]
         )
 
