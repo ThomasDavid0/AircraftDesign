@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Literal
 
+import geometry as g
+
+from acdesign.airfoils.polar import UIUCPolar
 from acdesign.aircraft.wing import Wing
 from acdesign.aircraft.wing_panel import WingPanel
 from acdesign.performance.aero import WingAero
@@ -77,7 +80,7 @@ class SolarWing:
         )
 
     @staticmethod
-    def straight_to_elliptical(nrows1, nrows2, ncols, section):
+    def straight_to_elliptical(nrows1, nrows2, ncols, section: UIUCPolar):
         """
         a = b2/2
         b = C/2
@@ -105,11 +108,13 @@ class SolarWing:
         b1 = nrows1 * pw + 0.05
         b = b1 + b2
         S = b1 * C + C * b2 * np.pi / 4
-
+        airfoil = section.airfoil()
         wing = Wing(
+            "main_wing",
+            g.P0(),
             [
-                WingPanel.trapezoidal(b1, b1 * C, 1, section={0:section}),
-                WingPanel.elliptical_cr(b2, C, 0.25, section={0:section}),
+                WingPanel.trapezoidal(b1, b1 * C, 1, airfoils={0:airfoil}),
+                WingPanel.elliptical_cr(b2, C, 0.25, airfoils={0:airfoil}),
             ]
         )
 
@@ -130,12 +135,12 @@ class SolarWing:
         y0 = 0.02
         panels = []
         fus_joint_added = False
-        while y0 + pw < wing.b / 2 and SolarWing.ncols(wing, y0 + pw)[0]:
+        while y0 + pw < wing.b / 2 and SolarWing.ncols(wing, y0 + pw):
             if y0 > 0.55 and not fus_joint_added:
                 y0 += 0.03
                 fus_joint_added = True
-            for panel in range(SolarWing.ncols(wing, y0 + pw)[0]):
-                x0 = wing.le((y0) * 2 / wing.b)[0] + 0.015 + panel * pw
+            for panel in range(SolarWing.ncols(wing, y0 + pw)):
+                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw
                 panels.append((x0, y0))
             y0 += pw
 

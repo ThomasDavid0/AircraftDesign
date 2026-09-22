@@ -57,7 +57,7 @@ class WingPanel:
         self.smc = self.s / self.b
 
         self.all_ribs = np.array(sorted(
-            list(set(self.ribs + list(self.airfoils.keys()) + [0.0, 1.0]))
+            list(set(list(self.ribs) + list(self.airfoils.keys()) + [0.0, 1.0]))
         ))
 
         if self.control is not None and self.tip_chord == 0:

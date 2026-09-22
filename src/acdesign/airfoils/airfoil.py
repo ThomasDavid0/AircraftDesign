@@ -16,7 +16,7 @@ class Airfoil:
     points: Point  # this is on the X Y plane, x is chordwise, y is thickness direction, z is zero
 
     def __post_init__(self):
-        self.le_point = self.points[int(self.points.minloc().x)]
+        self.le_point = self.points[int(self.points.minloc().x[0])]
         self.te_point = 0.5 * (self.points[0] + self.points[-1])
         self.te_thickness = (self.points[0].y - self.points[-1].y)[0]
         self.chord = self.points.x[0]
