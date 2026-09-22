@@ -168,18 +168,18 @@ class UIUCPolar:
         alpha_or_cl = (
             getattr(self.cl_to_alpha, mapping)(re, cl_or_alpha)
             if mode == "cl"
-            else self.alpha_to_cl(re, cl_or_alpha)
-        ).to_numpy()
+            else getattr(self.alpha_to_cl, mapping)(re, cl_or_alpha)
+        )
 
         cm = (
             getattr(self.cl_to_cm, mapping)(re, cl_or_alpha)
             if mode == "cl"
-            else self.alpha_to_cm(re, cl_or_alpha)
-        ).to_numpy()
+            else getattr(self.alpha_to_cm, mapping)(re, cl_or_alpha)
+        )
 
         cd = getattr(self.cl_to_cd, mapping)(
-            re, cl_or_alpha if mode == "cl" else alpha_or_cl
-        ).to_numpy()
+            re, cl_or_alpha if mode == "cl" else getattr(self.cl_to_cd, mapping)(re, alpha_or_cl)
+        )
 
         return xr.DataArray(
             np.stack(

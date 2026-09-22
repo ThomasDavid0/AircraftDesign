@@ -1,19 +1,22 @@
+import shutil
 from dataclasses import dataclass
+from itertools import chain
+from pathlib import Path
 from typing import Literal
+
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import plotly.graph_objects as go
+
 from acdesign.airfoils.airfoil import Airfoil
 from acdesign.airfoils.polar import UIUCPolar
-from acdesign.avl.keywords import kwdict
-from .wing_panel import WingPanel
-from pathlib import Path
-import shutil
 from acdesign.avl.avl_runner import run_avl
-from itertools import chain
+from acdesign.avl.keywords import kwdict
 from acdesign.avl.parse_avl_output import parse_strip_forces, parse_total_forces
 from acdesign.performance.aero import WingAero
+
+from .wing_panel import WingPanel
 
 
 @dataclass

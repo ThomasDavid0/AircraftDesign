@@ -1,22 +1,21 @@
 from dataclasses import dataclass, field
-from turtle import st
 from typing import Literal
 
-from acdesign.aircraft.wing import Wing
-from acdesign.aircraft.wing_panel import WingPanel
-from acdesign.performance.aero import WingAero
-from acdesign.atmosphere import Atmosphere
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from acdesign.performance.propulsion import (
-    PropulsionSystem,
-    FactorMotor,
-    ConstantPropeller,
-)
 import plotly.graph_objects as go
 from scipy.interpolate import RegularGridInterpolator, interp1d
 
+from acdesign.aircraft.wing import Wing
+from acdesign.aircraft.wing_panel import WingPanel
+from acdesign.atmosphere import Atmosphere
+from acdesign.performance.aero import WingAero
+from acdesign.performance.propulsion import (
+    ConstantPropeller,
+    FactorMotor,
+    PropulsionSystem,
+)
 
 pw = 0.13
 propulsion = PropulsionSystem(
@@ -204,7 +203,7 @@ class SolarWing:
         self, atm: Atmosphere, v: npt.ArrayLike, lift: npt.ArrayLike, n: float = 50
     ):
         cls = self.aero.get_cl(atm, v, lift)
-
+        
         loads, sloads = self.wing.run_avl(
             cls, ylocs=np.linspace(0, 1, n), sections=[self.aero.polars[0]] * n
         )
