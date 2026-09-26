@@ -12,7 +12,7 @@ def _():
     import pandas as pd
     import plotly.graph_objects as go
 
-    return Path, go, mo, pd
+    return Path, go, pd
 
 
 @app.cell
@@ -21,6 +21,12 @@ def _(Path, pd):
     results_sl = pd.read_csv(Path("examples/solar_plane/mace0/airspeed_sweep_sl.csv"))
     results_9000 = pd.read_csv(Path("examples/solar_plane/mace0/airspeed_sweep_9000.csv"))
     return results_9000, results_sl
+
+
+@app.cell
+def _(results_sl):
+    results_sl
+    return
 
 
 @app.cell
@@ -58,7 +64,7 @@ def _(go, results_9000, results_sl):
     import sys
     from acdesign.airfoils import Airfoil
     from acdesign.solar_wing import SolarWing
-    
+
     # Import main_wing from mace0 module
     sys.path.insert(0, "examples/solar_plane/mace0")
     from mace0 import main_wing
