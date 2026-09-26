@@ -6,20 +6,26 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
+    import os
     from pathlib import Path
 
     import marimo as mo
     import pandas as pd
     import plotly.graph_objects as go
 
-    return Path, go, pd
+    # Set working directory to project root
+    notebook_dir = Path(__file__).parent if "__file__" in globals() else Path.cwd()
+    project_root = notebook_dir.parent.parent.parent
+    os.chdir(project_root)
+
+    return Path, go, mo, os, pd
 
 
 @app.cell
 def _(Path, pd):
     # Load the CSV files
-    results_sl = pd.read_csv(Path("airspeed_sweep_sl.csv"))
-    results_9000 = pd.read_csv(Path("airspeed_sweep_9000.csv"))
+    results_sl = pd.read_csv(Path("examples/solar_plane/mace0/airspeed_sweep_sl.csv"))
+    results_9000 = pd.read_csv(Path("examples/solar_plane/mace0/airspeed_sweep_9000.csv"))
     return results_9000, results_sl
 
 
@@ -55,8 +61,12 @@ def _(go, results_9000, results_sl):
 
 @app.cell
 def _(go, results_9000, results_sl):
+    import sys
     from acdesign.airfoils import Airfoil
     from acdesign.solar_wing import SolarWing
+    
+    # Import main_wing from mace0 module
+    sys.path.insert(0, "examples/solar_plane/mace0")
     from mace0 import main_wing
 
     fig_power = go.Figure()
