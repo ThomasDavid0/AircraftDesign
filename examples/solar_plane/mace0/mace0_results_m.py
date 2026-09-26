@@ -1,28 +1,30 @@
 import marimo
 
-__generated_with = "0.9.14"
+__generated_with = "0.24.2"
 app = marimo.App(width="medium")
 
 
 @app.cell
-def __():
+def _():
+    from pathlib import Path
+
     import marimo as mo
     import pandas as pd
     import plotly.graph_objects as go
-    from pathlib import Path
-    return mo, pd, go, Path
+
+    return Path, go, pd
 
 
 @app.cell
-def __(Path, pd):
+def _(Path, pd):
     # Load the CSV files
-    results_sl = pd.read_csv(Path("examples/solar_plane/mace0/airspeed_sweep_sl.csv"))
-    results_9000 = pd.read_csv(Path("examples/solar_plane/mace0/airspeed_sweep_9000.csv"))
-    return results_sl, results_9000
+    results_sl = pd.read_csv(Path("airspeed_sweep_sl.csv"))
+    results_9000 = pd.read_csv(Path("airspeed_sweep_9000.csv"))
+    return results_9000, results_sl
 
 
 @app.cell
-def __(go, results_sl, results_9000):
+def _(go, results_9000, results_sl):
     # L/D vs Airspeed plot
     fig_ld = go.Figure()
     fig_ld.add_trace(
@@ -48,19 +50,15 @@ def __(go, results_sl, results_9000):
         yaxis_title="L/D",
     )
     fig_ld
-    return fig_ld,
+    return
 
 
 @app.cell
-def __(go, results_sl, results_9000):
-    from acdesign.solar_wing import SolarWing
+def _(go, results_9000, results_sl):
     from acdesign.airfoils import Airfoil
-    
-    # Recreate the solar wing to get cell power
-    wing_airfoil = Airfoil.local("SG6041")
-    main_wing = SolarWing.straight_to_elliptical(19, 18, 2, wing_airfoil)
-    
-    # Power vs Airspeed plot
+    from acdesign.solar_wing import SolarWing
+    from mace0 import main_wing
+
     fig_power = go.Figure()
     fig_power.add_trace(
         go.Scatter(
@@ -91,7 +89,7 @@ def __(go, results_sl, results_9000):
         yaxis_title="Power (W)",
     )
     fig_power
-    return Airfoil, SolarWing, fig_power, main_wing, wing_airfoil
+    return
 
 
 if __name__ == "__main__":
