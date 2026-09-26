@@ -1,16 +1,24 @@
 
-import numpy as np
-import pandas as pd
-
-from acdesign.atmosphere import Atmosphere
-from scipy.optimize import minimize, Bounds
-from acdesign.performance.aero import FuseAero, WingAero, AircraftAero
-from acdesign.performance.propulsion import Battery, Propeller, Motor, ConstantPropeller, FactorMotor, LookupPropeller, BUDDIMotor
-from acdesign.performance.operating_point import OperatingPoint
-from acdesign.performance.mass_estimation import estimate_mass
-from acdesign.airfoils.polar import UIUCPolar
 from dataclasses import dataclass
 
+import numpy as np
+import pandas as pd
+from scipy.optimize import Bounds, minimize
+
+from acdesign.airfoils.polar import UIUCPolar
+from acdesign.atmosphere import Atmosphere
+from acdesign.performance.aero import AircraftAero, FuseAero, WingAero
+from acdesign.performance.mass_estimation import estimate_mass
+from acdesign.performance.operating_point import OperatingPoint
+from acdesign.performance.propulsion import (
+    Battery,
+    BUDDIMotor,
+    ConstantPropeller,
+    FactorMotor,
+    LookupPropeller,
+    Motor,
+    Propeller,
+)
 
 clarky = UIUCPolar.local("CLARKYB")
 sa7038 = UIUCPolar.local("SA7038")

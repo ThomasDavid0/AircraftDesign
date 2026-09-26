@@ -1,16 +1,19 @@
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from json import dumps
-
-from acdesign import AVL_WORKSPACE
 from pathlib import Path
-from typing import Callable, overload
+from typing import overload
+
+import geometry as g
 import numpy as np
 import numpy.typing as npt
 import plotly.graph_objects as go
-from dataclasses import dataclass, field
+
+from acdesign import AVL_WORKSPACE
 from acdesign.airfoils.airfoil import Airfoil, InterpolatedAirfoil
-from acdesign.types import FloatArrayT
-import geometry as g
+from acdesign.atmosphere import Atmosphere
 from acdesign.avl.keywords import kwdict
+from acdesign.types import FloatArrayT
 
 
 @dataclass
@@ -23,7 +26,7 @@ class ControlSurface:
 
 @dataclass
 class WingPanel:
-    """Represents a single straight taper or elliptical section of a wing, with one full span 
+    """Represents a single straight taper or elliptical section of a wing, with one full span
     control surface. Wing defined from root to tip, or left to right if sym==False.
     Represents a single surface in AVL.
 
@@ -56,9 +59,9 @@ class WingPanel:
         self.tip_chord = self.C(1)
         self.smc = self.s / self.b
 
-        self.all_ribs = np.array(sorted(
-            list(set(list(self.ribs) + list(self.airfoils.keys()) + [0.0, 1.0]))
-        ))
+        self.all_ribs = np.array(
+            sorted(set(list(self.ribs) + list(self.airfoils.keys()) + [0.0, 1.0]))
+        )
 
         if self.control is not None and self.tip_chord == 0:
             raise ValueError(
@@ -66,7 +69,7 @@ class WingPanel:
             )
 
     def __repr__(self):
-        return dumps(self.__dict__, indent=2, default=str)
+        return f"WingPanel(b={self.b:.2f}, S={self.S:.2f}, AR={self.AR:.2f}, smc={self.smc:.2f}, TR={self.C(1) / self.C(0):.2f})"
 
     @overload
     def get_y(self, y: float, value: bool = False) -> float: ...
@@ -186,8 +189,7 @@ class WingPanel:
                         af1,
                         (y - y0) / (y1 - y0),
                     )
-        else:
-            return self.airfoils[y1]
+        return self.airfoils[y1]
 
     def get_xhinge(self, y: float) -> float:
         """get the x/c location of the hinge at spanwise location y"""
@@ -200,7 +202,15 @@ class WingPanel:
 
         return (wx_hinge_y - self.le(y)) / self.C(y)
 
-    def create_avl_surface(self, shift: g.Point = None, component_id: int = 1, name: str = None):
+    def create_avl_surface(
+        self,
+        shift: g.Point = None,
+        component_id: int = 1,
+        name: str | None = None,
+        sspace: float = 1.0,
+        atm: Atmosphere | None = None,
+        u: float | None = None,
+    ):
         shift = shift or g.P0()
         odata = []
 
@@ -213,23 +223,33 @@ class WingPanel:
         if self.sym:
             odata += kwdict["YDUPLICATE"](0.0)
 
-        odata += kwdict["TRANSLATE"](
-            shift.x[0], shift.y[0], shift.z[0]
-        )
+        odata += kwdict["TRANSLATE"](shift.x[0], shift.y[0], shift.z[0])
 
-        le_points = (
-            g.Point(
-                self.le(self.all_ribs), self.Y(self.all_ribs), self.Z(self.all_ribs)
-            )
+        le_points = g.Point(
+            self.le(self.all_ribs), self.Y(self.all_ribs), self.Z(self.all_ribs)
         )
         C = self.C(self.all_ribs)
 
         for i, y in enumerate(self.all_ribs):
-            odata += kwdict["SECTION"](le_points.x[i], le_points.y[i], le_points.z[i], C[i], 0)
-
+            
             airfoil = self.get_airfoil(y)
-            if not airfoil.name == "flat":
-                airfoil.dump_selig(Path(AVL_WORKSPACE) /  f"{airfoil.name}.dat")
+            
+            if atm is not None and u is not None and airfoil.polar is not None:
+                re = atm.rho * u * C[i] / atm.mu
+                alpha0, dclda = airfoil.polar.linear_approximation(re)
+                alpha0 = alpha0[0]
+                dclda = np.degrees(dclda)[0]
+            else:
+                alpha0, dclda = 0.0, 2 * np.pi
+            odata += kwdict["SECTION"](
+                le_points.x[i], le_points.y[i], le_points.z[i], C[i], -alpha0
+            )
+
+            odata += kwdict["CLAF"](dclda / (2 * np.pi))
+            
+
+            if airfoil.name != "flat":
+                airfoil.dump_selig(Path(AVL_WORKSPACE) / f"{airfoil.name}.dat")
                 odata += kwdict["AFILE"](None, None, f"{airfoil.name}.dat")
 
             if self.control is not None:
@@ -352,9 +372,7 @@ class WingPanel:
         for i, _y in enumerate(self.ribs):
             _le = self.le_point(_y) + shift
             afoil = self.get_airfoil(_y)
-            afpoints = (
-                drot.transform_point(afoil.body_points() * self.C(_y)) + _le
-            )
+            afpoints = drot.transform_point(afoil.body_points() * self.C(_y)) + _le
 
             fig.add_trace(
                 go.Scatter3d(
@@ -400,8 +418,7 @@ class WingPanel:
             )
 
             af_mc = (
-                drot.transform_point(af.body_points("mean_camber") * self.C(_y))
-                + _le
+                drot.transform_point(af.body_points("mean_camber") * self.C(_y)) + _le
             )
             fig.add_trace(
                 go.Scatter3d(

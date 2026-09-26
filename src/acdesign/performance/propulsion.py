@@ -1,11 +1,14 @@
 
-from typing import Any
-from acdesign.atmosphere import Atmosphere
-from .propeller import Propeller, ConstantPropeller, LookupPropeller
-import numpy as np
-import pandas as pd
 from dataclasses import dataclass
+from typing import Any
+
+import numpy as np
 import numpy.typing as npt
+import pandas as pd
+
+from acdesign.atmosphere import Atmosphere
+
+from .propeller import ConstantPropeller, LookupPropeller, Propeller, EmpiricalPropeller
 
 
 @dataclass
@@ -38,27 +41,38 @@ class Motor:
     def __call__(self, rpm, torque):
         return pd.DataFrame(dict(power =self.calculate(rpm, torque)))
 
+    def get_torque(self, rpm, power):
+        return power * 60 / (2 * np.pi * rpm)
+
 @dataclass
 class FactorMotor(Motor):
-    factor: float = 0.65
+    factor: float = 0.85
+    max_rpm: float = 13000.0
+    penalty_severity: float = 5.0 
 
     def efficiency(self, torque):
         
-        return np.full(torque.shape, self.factor)
-
-    def calculate(self, rpm, torque):
-        return 2 * np.pi * torque * (rpm / 60) / self.factor
+        return np.full_like(torque, self.factor, dtype=np.float64)
     
+    def calculate(self, rpm: np.ndarray, torque: np.ndarray) -> np.ndarray:
 
+        base_power = (2 * np.pi * torque * (rpm / 60)) / self.factor
+        
+        rpm_delta = np.maximum(0.0, rpm - self.max_rpm)
+        penalty = np.exp((rpm_delta / self.max_rpm) * self.penalty_severity)
+        
+        return base_power * penalty
 
 @dataclass
 class PropulsionSystem:
     propeller: Propeller
     motor: Motor
+    n: int = 1
 
     def __call__(self, atm: Atmosphere, airspeed: npt.ArrayLike, thrust: float) -> npt.ArrayLike:
-        rpm, torque = self.propeller.calculate(thrust, airspeed, atm.rho)
-        power = self.motor.calculate(rpm, torque)
+
+        rpm, torque = self.propeller.calculate(thrust / self.n, airspeed, atm.rho)
+        power = self.motor.calculate(rpm, torque) * self.n
         return power
 
 

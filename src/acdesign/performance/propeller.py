@@ -1,8 +1,10 @@
+from dataclasses import dataclass
+from importlib.resources import files
+from itertools import product
+
 import numpy as np
 import pandas as pd
 from scipy.interpolate import LinearNDInterpolator
-from itertools import product
-from importlib.resources import files
 
 
 def getresource(name: str):
@@ -17,6 +19,48 @@ class Propeller:
         rpm, torque = self.calculate(thrust, airspeed, rho)
         return pd.DataFrame(dict(rpm=rpm, torque=torque))
 
+
+@dataclass
+class EmpiricalPropeller:
+    """
+    Empirical propeller performance model using geometric metrics.
+    
+    Attributes:
+        diameter (float): Propeller diameter in metres (m).
+        pitch (float): Propeller pitch in metres (m).
+        baseline_efficiency (float): Expected aerodynamic efficiency (0.0 to 1.0) during cruise.
+    """
+    diameter: float
+    pitch: float
+    baseline_efficiency: float = 0.8
+    
+    def calculate(self, thrust: float, airspeed: float, rho: float) -> dict:
+        thrust = np.clip(thrust, 0, None)
+        airspeed = np.clip(airspeed, 0, None)
+
+        #https://www.tytorobotics.com/blogs/articles/how-to-calculate-propeller-thrust
+        k = (np.pi / 4.0) * rho * (self.diameter ** 2)
+        
+        a_coeff = k * (self.pitch ** 2)
+        b_coeff = -k * self.pitch * airspeed
+        c_coeff = -thrust
+
+        # n = (-b + sqrt(b^2 - 4ac)) / 2a
+        discriminant = (b_coeff ** 2) - (4 * a_coeff * c_coeff)
+        rps = (-b_coeff + np.sqrt(discriminant)) / (2 * a_coeff)
+        rpm = rps * 60.0
+
+        # 2. Dynamic power scaling based on airspeed regime
+        p_shaft = np.where(
+            airspeed < 0.1,
+            thrust * (self.pitch * rps) / self.baseline_efficiency,
+            (thrust * airspeed) / self.baseline_efficiency,
+        )
+
+        omega = 2 * np.pi * rps
+        torque = np.where(omega > 0, p_shaft / omega, 0.0)
+
+        return rpm, torque
 
 class ConstantPropeller(Propeller):
     def __init__(self, factor, rpm=2000):

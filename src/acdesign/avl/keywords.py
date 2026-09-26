@@ -1,10 +1,12 @@
-from geometry import Point
-from typing import List, Tuple, Union, NamedTuple
-from acdesign.old_aircraft import Panel, Rib, Plane
 from collections import namedtuple
-from itertools import chain
-from enum import Enum
 from importlib.resources import files
+from itertools import chain
+from typing import NamedTuple
+
+from geometry import Point
+
+from acdesign.old_aircraft import Panel, Plane, Rib
+
 kwfile = files("data") / "avl/kwords.txt"
 
 
@@ -16,7 +18,7 @@ class AVLParam:
         self.col = col
         self.optional = optional
 
-    def collect(self, data: List[List[str]]) -> Union[str, float, int]:
+    def collect(self, data: list[list[str]]) -> str | float | int:
         try:
             return self.dtype(data[self.row][self.col])
         except IndexError:
@@ -35,7 +37,7 @@ class AVLParam:
 def _read_kwordfile(file):
     
     with open(file, "r") as f:
-        data = [l.strip().split("|") for l in f.readlines() if "|" in l]
+        data = [l.strip().split("|") for l in f if "|" in l]
     
     data = [[l.strip().split() for l in line] for line in data]
 
@@ -46,8 +48,7 @@ def _read_kwordfile(file):
         else:
             _keydata[-1][0].append(r[0])
             _keydata[-1][1].append(r[1])
-    else:
-        return _keydata
+    return _keydata
 
 
 def get_dtype(example):
@@ -82,7 +83,7 @@ def _parse_kwfdata(kdata):
     
         
 class KeyWord:
-    def __init__(self, word: str, parms: List[AVLParam]):
+    def __init__(self, word: str, parms: list[AVLParam]):
         self.word = word
         self.parms= parms
         self.NTuple = namedtuple(word.title(), [parm.name for parm in self.parms])
@@ -97,7 +98,7 @@ class KeyWord:
         data = [line.split() for line in data]
         return self.NTuple(**{p.name: p.collect(data) for p in self.parms})
 
-    def dump(self, data: NamedTuple, add_comments=False) -> List[str]:
+    def dump(self, data: NamedTuple, add_comments=False) -> list[str]:
         
         out = [[self.word]]
         coms = [["!", "keyword"]]

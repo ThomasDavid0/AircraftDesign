@@ -1,21 +1,26 @@
+import shutil
+from collections.abc import Iterable
 from dataclasses import dataclass, replace
-from typing import Iterable, overload
+from itertools import chain
+from pathlib import Path
+from typing import overload
+
+import geometry as g
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import plotly.graph_objects as go
+
 from acdesign.airfoils.polar import UIUCPolar
-from acdesign.avl.keywords import kwdict
-from acdesign.environment import AVL_WORKSPACE
-from .wing_panel import WingPanel, ControlSurface
-from pathlib import Path
-import shutil
+from acdesign.atmosphere import Atmosphere
 from acdesign.avl.avl_runner import run_avl
-from itertools import chain
+from acdesign.avl.keywords import kwdict
 from acdesign.avl.parse_avl_output import parse_strip_forces, parse_total_forces
+from acdesign.environment import AVL_WORKSPACE
 from acdesign.performance.aero import WingAero
 from acdesign.types import FloatArrayT
-import geometry as g
+
+from .wing_panel import ControlSurface, WingPanel
 
 
 @dataclass
@@ -23,6 +28,7 @@ class Wing:
     """
     Comprises a list of panels connected sequentially from root to tip.
     """
+
     name: str
     offset: g.Point
     panels: list[WingPanel]
@@ -48,6 +54,9 @@ class Wing:
             raise ValueError("Inconsistent panel symmetry definitions")
         self.sym = self.panels[0].sym
 
+    def __repr__(self):
+        return f"Wing(name={self.name}, b={self.b:.2f}, S={self.S:.2f}, AR={self.AR:.2f}, smc={self.smc:.2f})"
+
     @overload
     def get_y(self, y: float, value: bool = False) -> float: ...
     @overload
@@ -63,9 +72,6 @@ class Wing:
 
     def __len__(self):
         return len(self.panels)
-
-    def __repr__(self) -> str:
-        return f"Wing(b={self.b:.2f}, S={self.S:.2f}, AR={self.AR:.2f}, smc={self.smc:.2f}, TR={self.C(1)[0] / self.C(0)[0]:.2f})"
 
     def set_control(self, control: ControlSurface):
         """Adds a control to each surface, corrects the C for each panel"""
@@ -137,7 +143,11 @@ class Wing:
         if pd.api.types.is_list_like(y):
             return y.__class__(self.C(yi, otbd, value) for yi in y)
         panel_id, panel_y = self.get_panel(y, otbd, value)
-        return self.panels[panel_id].le(panel_y) + self.Xs[panel_id-1] if panel_id > 0 else 0
+        return (
+            self.panels[panel_id].le(panel_y) + self.Xs[panel_id - 1]
+            if panel_id > 0
+            else 0
+        )
 
     def y(
         self, y: Iterable | float, otbd: bool = False, value: bool = False
@@ -145,7 +155,11 @@ class Wing:
         if pd.api.types.is_list_like(y):
             return y.__class__(self.C(yi, otbd, value) for yi in y)
         panel_id, panel_y = self.get_panel(y, otbd, value)
-        return self.panels[panel_id].y(panel_y) + self.Ys[panel_id-1] if panel_id > 0 else 0
+        return (
+            self.panels[panel_id].y(panel_y) + self.Ys[panel_id - 1]
+            if panel_id > 0
+            else 0
+        )
 
     def plot(
         self,
@@ -155,7 +169,7 @@ class Wing:
         mode="lines",
     ) -> go.Figure:
         fig = fig or go.Figure()
-        
+
         origin = self.offset + (shift or g.P0())
         for panel in self.panels:
             panel.plot_3d(npoints, origin, fig)
@@ -164,14 +178,31 @@ class Wing:
             origin += panel.le_point(1.0)
         return fig
 
-    def dump_avl(self, component: int = None, translate: g.Point = None):
+    def dump_avl(
+        self,
+        component: int | None = None,
+        translate: g.Point = None,
+        atm: Atmosphere | None = None,
+        u: float | None = None,
+    ):
 
         odata = [""]
-    
+
         for i, p in enumerate(self.panels):
-            pstart = g.Point(self.Xs[i-1], self.Ys[i-1], self.Zs[i-1]) if i > 0 else g.P0()
+            pstart = (
+                g.Point(self.Xs[i - 1], self.Ys[i - 1], self.Zs[i - 1])
+                if i > 0
+                else g.P0()
+            )
             pstart = pstart + (translate or g.P0()) + self.offset
-            odata += p.create_avl_surface(pstart, component, name=f"{self.name}_panel_{i}")       
+            odata += p.create_avl_surface(
+                pstart,
+                component,
+                name=f"{self.name}_panel_{i}",
+                sspace=0.0 if i == 0 and len(self.panels) > 1 else 2.0,
+                atm=atm,
+                u=u,
+            )
 
         return odata
 
@@ -222,7 +253,11 @@ class Wing:
         loads = (
             pd.concat(
                 [
-                    pd.Series(parse_total_forces(Path(AVL_WORKSPACE) /  f"total_forces_{i}.out"))
+                    pd.Series(
+                        parse_total_forces(
+                            Path(AVL_WORKSPACE) / f"total_forces_{i}.out"
+                        )
+                    )
                     for i in range(len(cls))
                 ],
                 keys=cls,

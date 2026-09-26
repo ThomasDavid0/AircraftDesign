@@ -1,19 +1,22 @@
-from pathlib import Path
-from dataclasses import dataclass
-from typing import Literal
-import urllib.request
-from geometry import Point, PY
-import geometry as g
-from httpx import get
-import numpy as np
-from scipy.interpolate import interp1d
 import shutil
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
+from pathlib import Path
+
+import geometry as g
+import numpy as np
+from geometry import PY, Point
+from scipy.interpolate import interp1d
+
+from .polar import UIUCPolar, uiuc_airfoils
 
 
 @dataclass
 class Airfoil:
     name: str
     points: Point  # this is on the X Y plane, x is chordwise, y is thickness direction, z is zero
+    polar: UIUCPolar | None
 
     def __post_init__(self):
         self.le_point = self.points[int(self.points.minloc().x[0])]
@@ -43,15 +46,14 @@ class Airfoil:
         """The points of the airfoil in the avl body frame (x aft, y right, z up)"""
         points = getattr(self, group)
         return g.Point(points.x, np.zeros_like(points.x), points.y)
-
+    
     def camber(self, x):
         return 0.5 * (self.top_func(x) + self.btm_func(x))
 
     def dump_selig(self, file: str | Path):
         with open(file, "w") as f:
             f.write(f"{self.name}\n")
-            for p in self.points:
-                f.write(f"{p.x[0]:.6f} {p.y[0]:.6f}\n")
+            f.writelines(f"{p.x[0]:.6f} {p.y[0]:.6f}\n" for p in self.points)
 
     @staticmethod
     def flat(name: str = "flat"):
@@ -61,13 +63,22 @@ class Airfoil:
             Point.concatenate(
                 [g.PX() * np.linspace(1, 0, 10), g.PX() * np.linspace(0.1, 1, 9)]
             ),
+            polar=None,
         )
 
     @staticmethod
-    def parse_selig(file: str | Path, name_override: str = None):
+    def from_polar(polar: UIUCPolar):
+        return Airfoil.parse_selig(Path(f"src/data/uiuc/{polar.name}.dat"), polar=polar)
+
+    @staticmethod
+    def parse_selig(
+        file: str | Path,
+        name_override: str | None = None,
+        polar: UIUCPolar | None = None,
+    ):
 
         with open(file) as f:
-            lines = [l.strip() for l in f.readlines()]
+            lines = [l.strip() for l in f]
         name = lines[0]
         lines = lines[1:]
 
@@ -87,23 +98,26 @@ class Airfoil:
 
         data = np.array([l.split() for l in lines]).astype(float)
 
-        return Airfoil(name, Point(np.append(data, np.zeros((len(data), 1)), axis=1)))
+        return Airfoil(
+            name, Point(np.append(data, np.zeros((len(data), 1)), axis=1)), polar=polar
+        )
 
     @staticmethod
     def local(name: str):
-        return Airfoil.parse_selig(Path(f"src/data/uiuc/{name}.dat"))
+        return Airfoil.parse_selig(
+            Path(f"src/data/uiuc/{name}.dat"), polar=UIUCPolar.local(name)
+        )
 
     @staticmethod
-    def download(airfoilname: str, outfolder: Path = None):
+    def download(airfoilname: str, outfolder: Path | None = None):
         # https://m-selig.ae.illinois.edu/ads/coord_updates/la5055.dat
         name = airfoilname.lower()
         name = name[-3] if name.endswith("-il") else name
-        #            _file = urllib.request.urlretrieve("http://airfoiltools.com/airfoil/seligdatfile?airfoil=" + airfoiltoolsname)
         try:
             _file = urllib.request.urlretrieve(
                 f"https://m-selig.ae.illinois.edu/ads/coord_seligFmt/{name}.dat"
             )
-        except Exception as e:
+        except urllib.error.URLError:
             print("cannot find airfoil ", airfoilname)
             return None
 
@@ -112,7 +126,13 @@ class Airfoil:
                 print(f"cannot write {name} to {airfoilname}.dat, already exists")
             else:
                 shutil.copy(_file[0], outfolder / f"{airfoilname}.dat")
-        return Airfoil.parse_selig(_file[0], name)
+        return Airfoil.parse_selig(
+            _file[0],
+            name,
+            polar=UIUCPolar.local(airfoilname)
+            if airfoilname in uiuc_airfoils()
+            else None,
+        )
 
     def set_te_thickness(self, thick: float):
         surfaces = -np.sign(np.gradient(self.points.x))
@@ -123,10 +143,10 @@ class Airfoil:
             PY(0.5 * (thick - self.te_thickness), len(self.points)) * xunit * surfaces
         )
 
-        return Airfoil(self.name, self.points + te_diff)
+        return Airfoil(self.name, self.points + te_diff, self.polar)
 
     def set_chord(self, chord):
-        return Airfoil(self.name, self.points * chord / self.chord)
+        return Airfoil(self.name, self.points * chord / self.chord, self.polar)
 
     def plot(self, fig=None, row=None, col=None):
         import plotly.graph_objects as go
@@ -176,3 +196,9 @@ class InterpolatedAirfoil(Airfoil):
             otbd,
             prop,
         )
+
+
+def download_dat_files():
+    airfoils = uiuc_airfoils()
+    for lftfile in Path("src/data/uiuc").glob("*.LFT"):
+        Airfoil.download(lftfile.stem, Path("src/data/uiuc"))

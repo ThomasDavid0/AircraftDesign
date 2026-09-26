@@ -1,7 +1,8 @@
-from pytest import fixture, approx
-from acdesign.atmosphere import Atmosphere
 import numpy as np
 import pandas as pd
+from pytest import approx, fixture
+
+from acdesign.atmosphere import Atmosphere
 
 
 def test_resource():

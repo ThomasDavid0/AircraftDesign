@@ -2,23 +2,22 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 import geometry as g
-
-from acdesign.airfoils.polar import UIUCPolar
-from acdesign.aircraft.wing import Wing
-from acdesign.aircraft.wing_panel import WingPanel
-from acdesign.performance.aero import WingAero
-from acdesign.atmosphere import Atmosphere
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from acdesign.performance.propulsion import (
-    PropulsionSystem,
-    FactorMotor,
-    ConstantPropeller,
-)
 import plotly.graph_objects as go
 from scipy.interpolate import RegularGridInterpolator, interp1d
 
+from acdesign.aircraft.wing import Wing
+from acdesign.aircraft.wing_panel import WingPanel
+from acdesign.airfoils import Airfoil
+from acdesign.atmosphere import Atmosphere
+from acdesign.performance.aero import WingAero
+from acdesign.performance.propulsion import (
+    ConstantPropeller,
+    FactorMotor,
+    PropulsionSystem,
+)
 
 pw = 0.13
 propulsion = PropulsionSystem(
@@ -34,7 +33,7 @@ class SolarWing:
     aero: WingAero
     npanels: int
     propulsion: PropulsionSystem = field(default_factory=lambda: propulsion)
-    cell_power = 3
+    cell_power = 2.5
 
     def data(self):
         return {
@@ -58,12 +57,12 @@ class SolarWing:
         )
 
     @staticmethod
-    def double_taper(nrows1, nrows2, ncols, section):
+    def double_taper(nrows1, nrows2, ncols, section, flap_w: float = 0, aileron_w: float=0):
         b1 = nrows1 * pw + 0.05
         b2 = nrows2 * pw + 0.05
         b = b1 + b2
-        CR = ncols * pw + 0.03 if ncols > 1 else ncols * pw + 0.1
-        CT = pw + 0.05
+        CR = (ncols * pw + 0.03 if ncols > 1 else ncols * pw + 0.1) + flap_w
+        CT = pw + 0.05 + aileron_w
 
         S = b1 * CR + b2 * (CR + CT) / 2
         wing = Wing(
@@ -80,7 +79,7 @@ class SolarWing:
         )
 
     @staticmethod
-    def straight_to_elliptical(nrows1, nrows2, ncols, section: UIUCPolar):
+    def straight_to_elliptical(nrows1, nrows2, ncols, airfoil: Airfoil):
         """
         a = b2/2
         b = C/2
@@ -108,7 +107,6 @@ class SolarWing:
         b1 = nrows1 * pw + 0.05
         b = b1 + b2
         S = b1 * C + C * b2 * np.pi / 4
-        airfoil = section.airfoil()
         wing = Wing(
             "main_wing",
             g.P0(),
@@ -120,7 +118,7 @@ class SolarWing:
 
         return SolarWing(
             wing,
-            WingAero(b, S, [section], [0, 1], wing.C),
+            WingAero(b, S, [airfoil.polar], [0, 1], wing.C),
             len(SolarWing.place_panels(wing))
             * 2,  # for now assume 1 row in tip section
         )

@@ -1,39 +1,98 @@
+from collections.abc import Callable
+from dataclasses import dataclass
+from functools import cached_property
+from typing import Literal
+
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import xarray as xr
+from scipy.optimize import Bounds, minimize
 
-from acdesign.atmosphere import Atmosphere
-from .operating_point import OperatingPoint
 from acdesign.airfoils.polar import UIUCPolar
-from typing import Callable, Literal
-from scipy.optimize import minimize, Bounds
-from dataclasses import dataclass
+from acdesign.atmosphere import Atmosphere
+
+from .operating_point import OperatingPoint
 
 
 @dataclass
 class FuseAero:
+    """
+    Fuselage drag and lift estimate.
+    Uses Schlichting's flat plate drag estimate, Raymer's form factor,
+    and the inclined cylinder crossflow principle.
+    """
     length: float
     diameter: float
+    ff: float = 1.2  
+    setting_angle: float = np.radians(2) # alpha at which the fuselage is aligned with the flow  
+    cdc: float = 1.2  # Crossflow drag coefficient for a cylinder
 
-    def __call__(self, atm: Atmosphere, v: npt.ArrayLike):
-        re = atm.rho * v * self.length / atm.mu
+    @cached_property
+    def swet(self):
+        return self.length * np.pi * self.diameter 
+
+    @cached_property
+    def s_front(self):
+        return 0.25 * np.pi * (self.diameter ** 2) 
+
+    @cached_property
+    def s_plan(self):
+        return self.length * self.diameter  
+
+    @staticmethod
+    def raymers_form_factor(length: float, diameter: float, setting_angle: float=np.radians(2), cdc:float=1.2):
+        return FuseAero(
+            length=length,
+            diameter=diameter,
+            ff = 1 + 60 * (diameter / length) ** 3 + 0.0025 * (length / diameter),
+            setting_angle=setting_angle,
+            cdc=cdc
+        )
+
+    def __call__(self, atm: Atmosphere, v: npt.ArrayLike, alpha: npt.ArrayLike = 0):
+        v = np.atleast_1d(v)
+        alpha = np.atleast_1d(alpha)
+        
+        alpha = alpha - self.setting_angle
+                
+        re = (atm.rho * v * self.length) / atm.mu
+          
+        # 1. Skin friction (Schlichting) & Form Factor
+        cf = 0.455 / (np.log10(re) ** 2.58)
+        cd0 = cf * self.ff
+
+        # 2. Inclined cylinder aerodynamic coefficients (Allen-Perkins / Slender Body)
+        # Potential flow lift + viscous crossflow lift
+        # Normalized by wetted area S to match your reference system
+        cl_potential = (2 * alpha * self.s_front) / self.swet
+        cl_crossflow = (self.cdc * (np.sin(alpha) ** 2) * np.cos(alpha) * self.s_plan) / self.swet
+        cl = cl_potential + cl_crossflow
+
+
+        cd = cd0 + (self.cdc * (np.sin(alpha) ** 3) * self.s_plan) / self.swet
+
+        vol = self.s_front * self.length
+        cm = (2 * alpha * vol) / (self.swet * self.length)
+       
         results = pd.DataFrame().assign(
-            fs_v=np.atleast_1d(v),
+            fs_v=v,
+            alpha=alpha,
             re=re,
-            S=self.length * np.pi * self.diameter,
+            S=self.swet,
             c=self.length,
-            Cl=0,
-            Cd0=0.455 / (np.log10(re) ** 2.58),
-            Cd=0.455 / (np.log10(re) ** 2.58),
-            Cm=0,
-        )
-        return results.assign(
-            lift=0,
-            drag=0.5 * atm.rho * results.fs_v**2 * results.S * results.Cd,
-            moment=0,
+            Cl=cl,
+            Cd0=cd0,
+            Cd=cd,
+            Cm=cm,
         )
 
+        q_inf = 0.5 * atm.rho * v ** 2  # Dynamic pressure        
+        return results.assign(
+            lift=q_inf * results.S * results.Cl,
+            drag=q_inf * results.S * results.Cd,
+            moment=q_inf * results.S * results.c * results.Cm,
+        )
 
 @dataclass
 class WingIncrement:

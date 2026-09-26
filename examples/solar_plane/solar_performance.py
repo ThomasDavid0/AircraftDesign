@@ -1,9 +1,10 @@
-from acdesign.atmosphere import Atmosphere
-from acdesign.solar_wing import SolarWing, SolarWingResults
-from acdesign.airfoils.polar import UIUCPolar
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+
+from acdesign.airfoils.polar import UIUCPolar
+from acdesign.atmosphere import Atmosphere
+from acdesign.solar_wing import SolarWing, SolarWingResults
 
 section = UIUCPolar.local("CLARKYB")
 

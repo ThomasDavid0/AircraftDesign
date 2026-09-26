@@ -1,18 +1,19 @@
-from collections import namedtuple
 import urllib.request
+from collections import namedtuple
+from functools import cached_property
 from importlib.resources import files
 from io import TextIOWrapper
+from itertools import chain
+from pathlib import Path
 from typing import Literal
 from urllib.error import HTTPError
-from itertools import chain
-from makefun import partial
+
 import numpy as np
-import xarray as xr
-import pandas as pd
 import numpy.typing as npt
+import pandas as pd
+import xarray as xr
 from bs4 import BeautifulSoup
-from .airfoil import Airfoil
-from pathlib import Path
+from makefun import partial
 
 all_resources = files("data")
 
@@ -84,11 +85,22 @@ class UIUCPolar:
         self.alpha_to_cm = UIUCPolar.create_mapping(self.pslift, "alpha", "Cm", 4)
         self.cl_to_alpha = UIUCPolar.create_mapping(self.pslift, "Cl", "alpha", 4)
 
+    def alpha_zero_lift(self, re: npt.ArrayLike):
+        res = self.apply(re, np.zeros_like(re), mode="cl", mapping="oto")
 
-    def airfoil(self):
-        #return [f.stem for f in Path("src/data/uiuc").glob("*.dat")]
-        return Airfoil.parse_selig(Path(f"src/data/uiuc/{self.name}.dat"))
-#        return Airfoil.download(self.name.lower())
+        return res.alpha.to_numpy()
+
+    def dclda_cl0(self, re: npt.ArrayLike, cl1: float=0.25):
+        results = self.apply(re, np.zeros_like(re), mode="cl", mapping="oto")
+        results_offset = self.apply(re, np.full_like(re, cl1), mode="cl", mapping="oto")
+
+        return cl1 / (results_offset.alpha - results.alpha).to_numpy()
+
+    def linear_approximation(self, re: npt.ArrayLike, cl1: float=0.5):
+        alpha0 = self.alpha_zero_lift(re)
+        dclda = self.dclda_cl0(re, cl1)
+
+        return alpha0, dclda
 
     @staticmethod
     def create_mapping(df: pd.DataFrame, source_col: str, target_col: str, degree=4):
@@ -163,39 +175,49 @@ class UIUCPolar:
         cl_or_alpha: npt.NDArray,
         mode: Literal["cl", "alpha"] = "cl",
         mapping: Literal["grid", "oto"] = "grid",
-    ) -> xr.DataArray:
+    ) -> xr.DataArray | pd.DataFrame:
         
         alpha_or_cl = (
             getattr(self.cl_to_alpha, mapping)(re, cl_or_alpha)
             if mode == "cl"
             else self.alpha_to_cl(re, cl_or_alpha)
-        ).to_numpy()
+        )#.to_numpy()
 
         cm = (
             getattr(self.cl_to_cm, mapping)(re, cl_or_alpha)
             if mode == "cl"
             else self.alpha_to_cm(re, cl_or_alpha)
-        ).to_numpy()
+        )#.to_numpy()
 
         cd = getattr(self.cl_to_cd, mapping)(
             re, cl_or_alpha if mode == "cl" else alpha_or_cl
-        ).to_numpy()
-
-        return xr.DataArray(
-            np.stack(
-                [
-                    alpha_or_cl,
-                    cm,
-                    cd,
-                ]
-            ),
-            dims=["result", "re", "cl" if mode == "cl" else "alpha"],
-            coords={
-                "result": ["alpha" if mode == "cl" else "cl", "Cm", "Cd"],
-                "re": re,
-                "cl" if mode == "cl" else "alpha": cl_or_alpha,
-            },
-        )
+        )#.to_numpy()
+        if mapping == "oto":
+            return pd.DataFrame(
+                {
+                    "re": re,
+                    "Cl": cl_or_alpha if mode == "cl" else alpha_or_cl,
+                    "alpha": alpha_or_cl if mode == "cl" else cl_or_alpha,
+                    "Cm": cm,
+                    "Cd": cd,
+                }
+            )
+        else:
+            return xr.DataArray(
+                np.stack(
+                    [
+                        alpha_or_cl,
+                        cm,
+                        cd,
+                    ]
+                ),
+                dims=["result", "re", "cl" if mode == "cl" else "alpha"],
+                coords={
+                    "result": ["alpha" if mode == "cl" else "cl", "Cm", "Cd"],
+                    "re": re,
+                    "cl" if mode == "cl" else "alpha": cl_or_alpha,
+                },
+            )
 
     def lookup(
         self,
@@ -332,8 +354,3 @@ def available_sections():
     
     return set(uiuc).intersection(set(dat))
 
-def download_dat_files():
-    airfoils = uiuc_airfoils()
-    for lftfile in Path("src/data/uiuc").glob("*.LFT"):
-        Airfoil.download(lftfile.stem, Path("src/data/uiuc"))
-    

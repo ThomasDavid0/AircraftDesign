@@ -1,13 +1,14 @@
+from typing import NamedTuple
+
+import numpy as np
+from geometry import P0, Euler, Transformation
+
+from acdesign.old_aircraft import Panel, Plane, Rib
+
 from .keywords import AVLParam, kwdict
 
-from acdesign.old_aircraft import Rib, Panel, Plane
-from typing import NamedTuple, List
 
-from geometry import P0, Transformation, Euler
-import numpy as np
-
-
-def rib_dump_avl(rib: Rib, comms=False) -> List[NamedTuple]:
+def rib_dump_avl(rib: Rib, comms=False) -> list[NamedTuple]:
     return kwdict["SECTION"].dump(kwdict["SECTION"].create(
             rib.transform.translation.x[0],
             rib.transform.translation.y[0],
@@ -18,7 +19,7 @@ def rib_dump_avl(rib: Rib, comms=False) -> List[NamedTuple]:
 
 
 
-def panel_dump_avl(panel: Panel, symm=True, comms=False) -> List[NamedTuple]:
+def panel_dump_avl(panel: Panel, symm=True, comms=False) -> list[NamedTuple]:
     #AVL works in x aft, yright, z up, everythin global, so some conversions done here.
     con = Transformation(P0(), Euler(0, np.pi, 0))
     return kwdict["SURFACE"].dump(kwdict["SURFACE"].create(panel.name, 1, 1.0, 16, -2.0), comms) \
@@ -32,7 +33,7 @@ def panel_dump_avl(panel: Panel, symm=True, comms=False) -> List[NamedTuple]:
         )
 
 
-def plane_dump_avl(plane: Plane, comms=False) -> List[NamedTuple]:
+def plane_dump_avl(plane: Plane, comms=False) -> list[NamedTuple]:
     ptups = kwdict["HEADER"].dump(
         kwdict["HEADER"].create(
             plane.name,
