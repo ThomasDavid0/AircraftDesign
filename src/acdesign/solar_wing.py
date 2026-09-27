@@ -143,8 +143,8 @@ class SolarWing:
                 y0 += 0.03
                 fus_joint_added = True
             
-            # Determine which panel this row is in (check at row end)
-            y_norm = (y0 + pw) * 2 / wing.b
+            # Determine which panel this row is in (check at row start)
+            y_norm = y0 * 2 / wing.b
             panel_id, _ = wing.get_panel(y_norm)
             
             # Flap on all panels except last, aileron on last panel only
@@ -159,7 +159,7 @@ class SolarWing:
                 break
             
             # Place solar panels in this row
-            le = wing.le(y0 * 2 / wing.b)
+            le = wing.le(y_norm)
             for i in range(ncols):
                 x0 = le + 0.015 + i * pw
                 panels.append((x0, y0))
