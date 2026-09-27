@@ -137,11 +137,16 @@ class SolarWing:
         fus_joint_added = False
         
         # Calculate the usable chord by subtracting control surface widths
-        def usable_chord(y):
-            c = wing.C(y)
-            # Interpolate control surface width based on spanwise location
-            # flap_w at root (y=0), aileron_w at tip (y=1)
-            control_w = flap_w * (1 - y) + aileron_w * y
+        def usable_chord(y_norm):
+            """y_norm is normalized spanwise location (0 to 1)"""
+            c = wing.C(y_norm)
+            # Determine which panel we're on and use appropriate control surface width
+            panel_id, _ = wing.get_panel(y_norm)
+            # Flap on all panels except the last one, aileron on the last panel
+            if panel_id < len(wing.panels) - 1:
+                control_w = flap_w
+            else:
+                control_w = aileron_w
             return c - control_w
         
         # Modified ncols that accounts for control surfaces
@@ -152,8 +157,14 @@ class SolarWing:
             if y0 > 0.55 and not fus_joint_added:
                 y0 += 0.03
                 fus_joint_added = True
+            
+            # Determine control surface width for this row
+            y_norm = (y0 + pw / 2) * 2 / wing.b
+            panel_id, _ = wing.get_panel(y_norm)
+            control_w = flap_w if panel_id < len(wing.panels) - 1 else aileron_w
+            
             for panel in range(ncols_usable(y0 + pw)):
-                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw + flap_w
+                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw + control_w
                 panels.append((x0, y0))
             y0 += pw
 
