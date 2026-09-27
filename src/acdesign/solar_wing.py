@@ -66,6 +66,8 @@ class SolarWing:
 
         S = b1 * CR + b2 * (CR + CT) / 2
         wing = Wing(
+            "main_wing",
+            g.P0(),
             [
                 WingPanel.trapezoidal(b1, b1 * CR, 1),
                 WingPanel.trapz_crct(b2, CR, CT, 0.25),
