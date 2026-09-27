@@ -58,17 +58,26 @@ class Wing:
         return f"Wing(name={self.name}, b={self.b:.2f}, S={self.S:.2f}, AR={self.AR:.2f}, smc={self.smc:.2f})"
 
     @overload
-    def get_y(self, y: float, value: bool = False) -> float: ...
+    def get_y(self, y: float, from_distance: bool = False) -> float: ...
     @overload
-    def get_y(self, y: FloatArrayT, value: bool = False) -> FloatArrayT: ...
-    def get_y(self, y: FloatArrayT | float, value: bool = False) -> FloatArrayT | float:
-        """Convert spanwise location or distance along panel to spanwise location"""
-        _y = y * 2 / self.b if value else y
+    def get_y(self, y: FloatArrayT, from_distance: bool = False) -> FloatArrayT: ...
+    def get_y(self, y: FloatArrayT | float, from_distance: bool = False) -> FloatArrayT | float:
+        """Convert spanwise location or distance along wing to normalized spanwise location (0 to 1).
+        
+        Args:
+            y: Spanwise location (0-1) or distance (meters) along wing
+            from_distance: If True, y is interpreted as distance in meters; if False, as normalized location
+            
+        Returns:
+            Normalized spanwise location (0 to 1)
+        """
+        _y = np.atleast_1d(y)
+        _y = _y * 2 / self.b if from_distance else _y
         if np.any(_y > 1) or np.any(_y < 0):
             raise ValueError(
                 "Attempt to get chord at spanwise location outside of panel"
             )
-        return _y
+        return _y if np.ndim(y) > 0 else _y[0]
 
     def __len__(self):
         return len(self.panels)
@@ -93,14 +102,14 @@ class Wing:
         )
 
     def _get_panel(
-        self, y: npt.NDArray, otbd: bool = False, value: bool = False
+        self, y: npt.NDArray, otbd: bool = False, from_distance: bool = False
     ) -> Iterable[tuple[int, float]] | tuple[int, float]:
         """Get panel id and spanwise location within panel for given spanwise location on wing
         if the spanwise location is at a panel intersection the panel closer to the root is returned
             unless otbd is True.
 
         """
-        _y = self.get_y(y, value)
+        _y = self.get_y(y, from_distance)
 
         panel_id = np.zeros_like(_y, dtype=int)
 
@@ -123,21 +132,21 @@ class Wing:
     
     @overload
     def get_panel(
-        self, y: float, otbd: bool = False, value: bool = False
+        self, y: float, otbd: bool = False, from_distance: bool = False
     ) -> tuple[int, float]: ...
     @overload
     def get_panel(
-        self, y: Iterable[float], otbd: bool = False, value: bool = False
+        self, y: Iterable[float], otbd: bool = False, from_distance: bool = False
     ) -> Iterable[tuple[int, float]]: ...
 
 
     def get_panel(
-        self, y: npt.NDArray, otbd: bool = False, value: bool = False
+        self, y: npt.NDArray, otbd: bool = False, from_distance: bool = False
     ) -> Iterable[tuple[int, float]] | tuple[int, float]:
         was_array = pd.api.types.is_list_like(y)
         y = np.atleast_1d(y)
 
-        res = self._get_panel(y, otbd, value)
+        res = self._get_panel(y, otbd, from_distance)
 
         if was_array:
             return res
@@ -145,29 +154,29 @@ class Wing:
             return res[0]
 
     @overload
-    def C(self, y: float, otbd: bool = False, value: bool = False) -> float: ...
+    def C(self, y: float, otbd: bool = False, from_distance: bool = False) -> float: ...
     @overload
-    def C(self, y: Iterable, otbd: bool = False, value: bool = False) -> Iterable: ...
+    def C(self, y: Iterable, otbd: bool = False, from_distance: bool = False) -> Iterable: ...
     def C(
-        self, y: Iterable | float, otbd: bool = False, value: bool = False
+        self, y: Iterable | float, otbd: bool = False, from_distance: bool = False
     ) -> Iterable | float:
         if pd.api.types.is_list_like(y):
-            return y.__class__(self.C(yi, otbd, value) for yi in y)
+            return y.__class__(self.C(yi, otbd, from_distance) for yi in y)
 
-        panel_id, panel_y = self.get_panel(y, otbd, value)
+        panel_id, panel_y = self.get_panel(y, otbd, from_distance)
 
         return self.panels[panel_id].C(panel_y)
 
     @overload
-    def le(self, y: float, otbd: bool = False, value: bool = False) -> float: ...
+    def le(self, y: float, otbd: bool = False, from_distance: bool = False) -> float: ...
     @overload
-    def le(self, y: Iterable, otbd: bool = False, value: bool = False) -> Iterable: ...
+    def le(self, y: Iterable, otbd: bool = False, from_distance: bool = False) -> Iterable: ...
     def le(
-        self, y: Iterable | float, otbd: bool = False, value: bool = False
+        self, y: Iterable | float, otbd: bool = False, from_distance: bool = False
     ) -> Iterable | float:
         if pd.api.types.is_list_like(y):
-            return y.__class__(self.C(yi, otbd, value) for yi in y)
-        panel_id, panel_y = self.get_panel(y, otbd, value)
+            return y.__class__(self.C(yi, otbd, from_distance) for yi in y)
+        panel_id, panel_y = self.get_panel(y, otbd, from_distance)
         return (
             self.panels[panel_id].le(panel_y) + self.Xs[panel_id - 1]
             if panel_id > 0
@@ -175,11 +184,11 @@ class Wing:
         )
 
     def y(
-        self, y: Iterable | float, otbd: bool = False, value: bool = False
+        self, y: Iterable | float, otbd: bool = False, from_distance: bool = False
     ) -> Iterable | float:
         if pd.api.types.is_list_like(y):
-            return y.__class__(self.C(yi, otbd, value) for yi in y)
-        panel_id, panel_y = self.get_panel(y, otbd, value)
+            return y.__class__(self.C(yi, otbd, from_distance) for yi in y)
+        panel_id, panel_y = self.get_panel(y, otbd, from_distance)
         return (
             self.panels[panel_id].y(panel_y) + self.Ys[panel_id - 1]
             if panel_id > 0
