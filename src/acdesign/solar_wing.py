@@ -12,7 +12,6 @@ from acdesign.aircraft.wing import Wing
 from acdesign.aircraft.wing_panel import WingPanel
 from acdesign.airfoils import Airfoil
 from acdesign.atmosphere import Atmosphere
-from acdesign.performance.aero import WingAero
 from acdesign.performance.propulsion import (
     ConstantPropeller,
     FactorMotor,
@@ -30,9 +29,7 @@ atm = Atmosphere.alt(0)
 @dataclass
 class SolarWing:
     wing: Wing
-    aero: WingAero
     npanels: int
-    propulsion: PropulsionSystem = field(default_factory=lambda: propulsion)
     cell_power = 2.5
 
     def data(self):
@@ -46,46 +43,55 @@ class SolarWing:
         }
 
     @staticmethod
-    def straight(nrows, ncols, section):
-        b = nrows * pw + 0.1
-        C = ncols * pw + 0.1
-        wing = Wing([WingPanel.trapezoidal(b, b * C, 1)])
+    def straight(
+        name: str,
+        nrows: int,
+        ncols: int,
+        airfoil: Airfoil,
+        control_w: float = 0,
+        gap=0.03,
+    ):
+        b = nrows * pw + gap * 4
+        C = gap + ncols * pw + max(control_w, gap)
+        wing = Wing(name or "solar wing", g.P0(), [WingPanel.trapezoidal(b, b * C, 1)])
         return SolarWing(
             wing,
-            WingAero(b, b * C, [section], [0, 1]),
-            len(SolarWing.place_panels(wing)) * 2,
+            len(SolarWing.place_panels(wing, flap_w=control_w, aileron_w=control_w, gap=gap)) * 2,
         )
 
     @staticmethod
-    def double_taper(nrows1, nrows2, ncols, section, flap_w: float = 0, aileron_w: float=0):
-        b1 = nrows1 * pw + 0.05
-        b2 = nrows2 * pw + 0.05
-        b = b1 + b2
-        
-        # Calculate gap based on number of columns (matching original logic)
-        gap = 0.03 if ncols > 1 else 0.1
-        
-        CR = ncols * pw + gap + flap_w
-        CT = pw + 0.03 + aileron_w  # tip always uses 0.03 gap (single column)
+    def double_taper(
+        name: str,
+        nrows1,
+        nrows2,
+        ncolsroot,
+        ncolstip,
+        airfoil: Airfoil,
+        flap_w: float = 0,
+        aileron_w: float = 0,
+        gap: float = 0.03,
+    ):
+        b1 = nrows1 * pw + gap * 4
+        b2 = nrows2 * pw + gap * 4
 
-        S = b1 * CR + b2 * (CR + CT) / 2
+        CR = gap + ncolsroot * pw + max(flap_w, gap)
+        CT = gap + ncolstip * pw + max(aileron_w, gap)
+
         wing = Wing(
-            "main_wing",
+            name or "solar_wing",
             g.P0(),
             [
-                WingPanel.trapezoidal(b1, b1 * CR, 1),
-                WingPanel.trapz_crct(b2, CR, CT, 0.25),
-            ]
+                WingPanel.trapezoidal(b1, b1 * CR, 1, airfoils={0: airfoil}),
+                WingPanel.trapz_crct(b2, CR, CT, 0.25, airfoils={0: airfoil}),
+            ],
         )
         return SolarWing(
             wing,
-            WingAero(b, S, [section], [0, 1], wing.C),
-            len(SolarWing.place_panels(wing, flap_w, aileron_w, gap))
-            * 2,  # for now assume 1 row in tip section
+            len(SolarWing.place_panels(wing, flap_w, aileron_w, gap)) * 2,
         )
 
     @staticmethod
-    def straight_to_elliptical(nrows1, nrows2, ncols, airfoil: Airfoil):
+    def straight_to_elliptical(name: str, nrows1: int, nrows2: int, ncols: int, airfoil: Airfoil):
         """
         a = b2/2
         b = C/2
@@ -111,22 +117,19 @@ class SolarWing:
         b2 = np.sqrt(4 * Ym**2 / (1 - Cm**2 / (4 * C**2)))
 
         b1 = nrows1 * pw + 0.05
-        b = b1 + b2
-        S = b1 * C + C * b2 * np.pi / 4
+
         wing = Wing(
-            "main_wing",
+            name or "solar_wing",
             g.P0(),
             [
-                WingPanel.trapezoidal(b1, b1 * C, 1, airfoils={0:airfoil}),
-                WingPanel.elliptical_cr(b2, C, 0.25, airfoils={0:airfoil}),
-            ]
+                WingPanel.trapezoidal(b1, b1 * C, 1, airfoils={0: airfoil}),
+                WingPanel.elliptical_cr(b2, C, 0.25, airfoils={0: airfoil}),
+            ],
         )
 
         return SolarWing(
             wing,
-            WingAero(b, S, [airfoil.polar], [0, 1], wing.C),
-            len(SolarWing.place_panels(wing))
-            * 2,  # for now assume 1 row in tip section
+            len(SolarWing.place_panels(wing)) * 2,
         )
 
     @staticmethod
@@ -135,43 +138,55 @@ class SolarWing:
         return ((wing.C(y * 2 / wing.b) - gap) // pw).astype(int)
 
     @staticmethod
-    def place_panels(wing: Wing, flap_w: float = 0, aileron_w: float = 0, gap: float = 0.03):
-        y0 = 0.02
+    def place_panels(
+        wing: Wing, flap_w: float = 0, aileron_w: float = 0, gap: float = 0.03
+    ):
+        y0 = gap
         panels = []
         fus_joint_added = False
-        
+
         while y0 + pw < wing.b / 2:
             # Add fuselage joint gap if needed
-            if y0 > 0.55 and not fus_joint_added:
-                y0 += 0.03
+            if y0 > 0.5 and not fus_joint_added:
+                y0 += gap * 2
                 fus_joint_added = True
-            
+
             # Determine which panel this row is in (check at row start)
-            y_norm = y0 * 2 / wing.b
-            panel_id, _ = wing.get_panel(y_norm)
-            
+            panel_id = wing.get_panel(y0 + pw, from_distance=True)[0]
+
             # Flap on all panels except last, aileron on last panel only
-            control_w = flap_w if panel_id < len(wing.panels) - 1 else aileron_w
-            
+            control_w = gap + max(
+                flap_w if panel_id < len(wing.panels) - 1 else aileron_w, gap
+            )
+
             # Calculate usable chord and number of panels that fit
-            chord = wing.C(y_norm)
-            usable_chord = chord - control_w
-            ncols = int((usable_chord - gap) // pw)
-            
+            chord = wing.C(y0 + pw, from_distance=True)
+
+            usable_chord = chord - control_w + 0.01
+            ncols = int(usable_chord // pw)
+
             if ncols <= 0:
                 break
-            
+
             # Place solar panels in this row
-            le = wing.le(y_norm)
+            x0 = wing.le(y0 + pw, from_distance=True) + gap
+
             for i in range(ncols):
-                x0 = le + 0.015 + i * pw
-                panels.append((x0, y0))
-            
+                panels.append((x0 + i * pw, y0))
+
             y0 += pw
 
         return panels
 
-    def plot(self, fig=None, row=None, col=None, flap_w: float = 0, aileron_w: float = 0):
+    def plot(
+        self,
+        fig=None,
+        row=None,
+        col=None,
+        flap_w: float = 0,
+        aileron_w: float = 0,
+        gap: float = 0.03,
+    ):
         fig = go.Figure() if fig is None else fig
         y = np.linspace(0, 1, 100)
         yb = y * self.wing.b / 2
@@ -199,7 +214,7 @@ class SolarWing:
             col=col,
         )
 
-        panels = SolarWing.place_panels(self.wing, flap_w, aileron_w)
+        panels = SolarWing.place_panels(self.wing, flap_w, aileron_w, gap)
         for x0, y0 in panels:
             fig.add_shape(
                 xref="x",
@@ -340,7 +355,8 @@ class SolarWingResults:
         power_interpolator = RegularGridInterpolator(
             (mass, airspeed),
             df.power.values.reshape(len(airspeed), len(mass)).T,
-            method=method, bounds_error=False
+            method=method,
+            bounds_error=False,
         )
 
         return SolarWingResults(
