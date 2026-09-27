@@ -191,6 +191,7 @@ class SolarWing:
         y = np.linspace(0, 1, 100)
         yb = y * self.wing.b / 2
 
+        # Plot right side (positive y)
         fig.add_trace(
             go.Scatter(
                 x=yb,
@@ -198,6 +199,7 @@ class SolarWing:
                 mode="lines",
                 name="LE",
                 line=dict(color="black"),
+                showlegend=False,
             ),
             row=row,
             col=col,
@@ -209,12 +211,41 @@ class SolarWing:
                 mode="lines",
                 name="TE",
                 line=dict(color="black"),
+                showlegend=False,
+            ),
+            row=row,
+            col=col,
+        )
+
+        # Plot left side (negative y)
+        fig.add_trace(
+            go.Scatter(
+                x=-yb,
+                y=self.wing.le(y),
+                mode="lines",
+                name="LE",
+                line=dict(color="black"),
+                showlegend=False,
+            ),
+            row=row,
+            col=col,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=-yb,
+                y=self.wing.le(y) + self.wing.C(y),
+                mode="lines",
+                name="TE",
+                line=dict(color="black"),
+                showlegend=False,
             ),
             row=row,
             col=col,
         )
 
         panels = SolarWing.place_panels(self.wing, flap_w, aileron_w, gap)
+        
+        # Plot solar panels on right side
         for x0, y0 in panels:
             fig.add_shape(
                 xref="x",
@@ -227,7 +258,24 @@ class SolarWing:
                 row=row,
                 col=col,
             )
+        
+        # Plot solar panels on left side
+        for x0, y0 in panels:
+            fig.add_shape(
+                xref="x",
+                yref="y",
+                type="rect",
+                y0=x0,
+                x0=-y0 - pw,
+                y1=x0 + pw,
+                x1=-y0,
+                row=row,
+                col=col,
+            )
+        
         panels = np.array(panels)
+        
+        # Add panel numbers on right side
         fig.add_trace(
             go.Scatter(
                 x=panels[:, 1] + pw / 2,
@@ -235,7 +283,23 @@ class SolarWing:
                 mode="text",
                 text=np.arange(len(panels)) + 1,
                 marker=dict(color="red", size=2),
-                name="Solar Cells",
+                name="Solar Cells (Right)",
+                showlegend=False,
+            ),
+            row=row,
+            col=col,
+        )
+        
+        # Add panel numbers on left side
+        fig.add_trace(
+            go.Scatter(
+                x=-(panels[:, 1] + pw / 2),
+                y=panels[:, 0] + pw / 2,
+                mode="text",
+                text=np.arange(len(panels)) + len(panels) + 1,
+                marker=dict(color="red", size=2),
+                name="Solar Cells (Left)",
+                showlegend=False,
             ),
             row=row,
             col=col,
