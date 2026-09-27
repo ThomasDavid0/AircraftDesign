@@ -135,38 +135,35 @@ class SolarWing:
         y0 = 0.02
         panels = []
         fus_joint_added = False
+        gap = 0.025
         
-        # Calculate the usable chord by subtracting control surface widths
-        def usable_chord(y_norm):
-            """y_norm is normalized spanwise location (0 to 1)"""
-            c = wing.C(y_norm)
-            # Determine which panel we're on and use appropriate control surface width
-            panel_id, _ = wing.get_panel(y_norm)
-            # Flap on all panels except the last one, aileron on the last panel
-            if panel_id < len(wing.panels) - 1:
-                control_w = flap_w
-            else:
-                control_w = aileron_w
-            return c - control_w
-        
-        # Modified ncols that accounts for control surfaces
-        def ncols_usable(y, gap=0.025):
-            return ((usable_chord(y * 2 / wing.b) - gap) // pw).astype(int)
-        
-        while y0 + pw < wing.b / 2 and ncols_usable(y0 + pw):
+        while y0 + pw < wing.b / 2:
+            # Add fuselage joint gap if needed
             if y0 > 0.55 and not fus_joint_added:
                 y0 += 0.03
                 fus_joint_added = True
             
-            # Determine control surface width for this row
-            # Use the end of the row to determine which panel we're in
+            # Determine which panel this row is in (check at row end)
             y_norm = (y0 + pw) * 2 / wing.b
             panel_id, _ = wing.get_panel(y_norm)
+            
+            # Flap on all panels except last, aileron on last panel only
             control_w = flap_w if panel_id < len(wing.panels) - 1 else aileron_w
             
-            for panel in range(ncols_usable(y0 + pw)):
-                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw
+            # Calculate usable chord and number of panels that fit
+            chord = wing.C(y_norm)
+            usable_chord = chord - control_w
+            ncols = int((usable_chord - gap) // pw)
+            
+            if ncols <= 0:
+                break
+            
+            # Place solar panels in this row
+            le = wing.le(y0 * 2 / wing.b)
+            for i in range(ncols):
+                x0 = le + 0.015 + i * pw
                 panels.append((x0, y0))
+            
             y0 += pw
 
         return panels
