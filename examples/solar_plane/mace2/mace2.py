@@ -144,8 +144,8 @@ if __name__ == "__main__":
         climb_energy = (
             results.power.min() - npanels * main_wing.cell_power
         ) * 60 * 15 + 9.81 * aircraft.mass.m[0] * 2000
-        climb_capacity = climb_energy / (6 * 4.1)
-        print(f"Climb Energy (15 minutes): {climb_energy} J")
-        print(f"Climb Capacity (15 minutes): {climb_capacity} Ah")
+        climb_capacity = climb_energy / (6 * 4.1 * 3600)  # J / (V * 3600) = Ah
+        print(f"Climb Energy (15 minutes): {climb_energy:.0f} J")
+        print(f"Climb Capacity (15 minutes): {climb_capacity:.2f} Ah")
 
     print(f"Landing airspeed & 4000m: {u_4000_cl06:.2f} m/s")
