@@ -76,19 +76,24 @@ class WingPanel:
     @overload
     def get_y(self, y: FloatArrayT, value: bool = False) -> FloatArrayT: ...
     def get_y(self, y: FloatArrayT | float, value: bool = False) -> FloatArrayT | float:
-        """Convert spanwise location or distance along panel to spanwise location"""
+        """Convert spanwise location or distance along panel to normalized spanwise location (0 to 1).
+        
+        Args:
+            y: Spanwise location (0-1) or distance (meters) along panel
+            value: If True, y is interpreted as distance in meters; if False, as normalized location
+            
+        Returns:
+            Normalized spanwise location (0 to 1)
+        """
+        _y = np.atleast_1d(y)
         if value:
-            if self.sym:
-                _y = y * 2 / self.b
-            else:
-                _y = y / self.b
-        else:
-            _y = y
+            _y = _y * (2 / self.b if self.sym else 1 / self.b)
+        
         if np.any(_y > 1) or np.any(_y < 0):
             raise ValueError(
                 "Attempt to get chord at spanwise location outside of panel"
             )
-        return _y
+        return _y if np.ndim(y) > 0 else _y[0]
 
     def y(self, y: FloatArrayT | float, value: bool = False) -> FloatArrayT | float:
         """get panel local y location at spanwise location or distance along panel"""

@@ -101,9 +101,35 @@ class Wing:
             ],
         )
 
+    def _apply_to_panels(
+        self,
+        y: FloatArrayT | float,
+        func: callable,
+        otbd: bool = False,
+        from_distance: bool = False,
+    ) -> FloatArrayT | float:
+        """Helper method to apply a function across panels, handling scalar/array conversion.
+        
+        Args:
+            y: Spanwise location(s)
+            func: Function that takes (panel_id, panel_y) and returns a value
+            otbd: Whether to prefer outboard panel at boundaries
+            from_distance: Whether y is in distance units
+            
+        Returns:
+            Result(s) from applying func, maintaining input shape
+        """
+        is_scalar = np.ndim(y) == 0
+        y_array = np.atleast_1d(y)
+        
+        panel_data = self._get_panel(y_array, otbd, from_distance)
+        result = np.array([func(panel_id, panel_y) for panel_id, panel_y in panel_data])
+        
+        return result[0] if is_scalar else result
+
     def _get_panel(
         self, y: npt.NDArray, otbd: bool = False, from_distance: bool = False
-    ) -> Iterable[tuple[int, float]] | tuple[int, float]:
+    ) -> list[tuple[int, float]]:
         """Get panel id and spanwise location within panel for given spanwise location on wing
         if the spanwise location is at a panel intersection the panel closer to the root is returned
             unless otbd is True.
@@ -144,9 +170,7 @@ class Wing:
     ) -> list[tuple[int, float]] | tuple[int, float]:
         is_scalar = np.ndim(y) == 0
         y_array = np.atleast_1d(y)
-
         res = self._get_panel(y_array, otbd, from_distance)
-
         return res[0] if is_scalar else res
 
     @overload
@@ -156,17 +180,9 @@ class Wing:
     def C(
         self, y: FloatArrayT | float, otbd: bool = False, from_distance: bool = False
     ) -> FloatArrayT | float:
-        is_scalar = np.ndim(y) == 0
-        y_array = np.atleast_1d(y)
-        
-        panel_data = self._get_panel(y_array, otbd, from_distance)
-        
-        result = np.array([
-            self.panels[panel_id].C(panel_y) 
-            for panel_id, panel_y in panel_data
-        ])
-        
-        return result[0] if is_scalar else result
+        return self._apply_to_panels(
+            y, lambda pid, py: self.panels[pid].C(py), otbd, from_distance
+        )
 
     @overload
     def le(self, y: float, otbd: bool = False, from_distance: bool = False) -> float: ...
@@ -175,17 +191,12 @@ class Wing:
     def le(
         self, y: FloatArrayT | float, otbd: bool = False, from_distance: bool = False
     ) -> FloatArrayT | float:
-        is_scalar = np.ndim(y) == 0
-        y_array = np.atleast_1d(y)
-        
-        panel_data = self._get_panel(y_array, otbd, from_distance)
-        
-        result = np.array([
-            self.panels[panel_id].le(panel_y) + (self.Xs[panel_id - 1] if panel_id > 0 else 0)
-            for panel_id, panel_y in panel_data
-        ])
-        
-        return result[0] if is_scalar else result
+        return self._apply_to_panels(
+            y,
+            lambda pid, py: self.panels[pid].le(py) + (self.Xs[pid - 1] if pid > 0 else 0),
+            otbd,
+            from_distance,
+        )
 
     @overload
     def y(self, y: float, otbd: bool = False, from_distance: bool = False) -> float: ...
@@ -194,17 +205,12 @@ class Wing:
     def y(
         self, y: FloatArrayT | float, otbd: bool = False, from_distance: bool = False
     ) -> FloatArrayT | float:
-        is_scalar = np.ndim(y) == 0
-        y_array = np.atleast_1d(y)
-        
-        panel_data = self._get_panel(y_array, otbd, from_distance)
-        
-        result = np.array([
-            self.panels[panel_id].y(panel_y) + (self.Ys[panel_id - 1] if panel_id > 0 else 0)
-            for panel_id, panel_y in panel_data
-        ])
-        
-        return result[0] if is_scalar else result
+        return self._apply_to_panels(
+            y,
+            lambda pid, py: self.panels[pid].y(py) + (self.Ys[pid - 1] if pid > 0 else 0),
+            otbd,
+            from_distance,
+        )
 
     def plot(
         self,
