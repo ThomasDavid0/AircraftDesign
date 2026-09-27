@@ -21,7 +21,16 @@ wing_airfoil = Airfoil.local("SG6041")
 tail_airfoil = Airfoil.local("SD8020")
 
 
-main_wing = SolarWing.double_taper(18, 12, 3, wing_airfoil, flap_w=0.05, aileron_w=0.07)
+main_wing = SolarWing.double_taper(
+    18, 
+    12, 
+    3, 
+    2, 
+    wing_airfoil, 
+    flap_w=0.07, 
+    aileron_w=0.07, 
+    gap=0.01
+)
 # 1.8, 0.5, 0.0
 tail = Wings(
     g.P0(),
@@ -85,9 +94,9 @@ aircraft = Aircraft(
 
 if __name__ == "__main__":
     main_wing.plot(flap_w=0.05, aileron_w=0.05).show()
-    #results_sl = aircraft.airspeed_sweep(Atmosphere.alt(0), 9, 24, 1.0, avl_workspace, "_sl")
-    #results_sl.to_csv(Path("examples/solar_plane/mace0/airspeed_sweep_sl.csv"), index=False)
-    #results_9000 = aircraft.airspeed_sweep(
+    # results_sl = aircraft.airspeed_sweep(Atmosphere.alt(0), 9, 24, 1.0, avl_workspace, "_sl")
+    # results_sl.to_csv(Path("examples/solar_plane/mace0/airspeed_sweep_sl.csv"), index=False)
+    # results_9000 = aircraft.airspeed_sweep(
     #    Atmosphere.alt(9000), 14, 30, 1.0, avl_workspace, "_9000m"
-    #)
-    #results_9000.to_csv(Path("examples/solar_plane/mace0/airspeed_sweep_9000.csv"), index=False)
+    # )
+    # results_9000.to_csv(Path("examples/solar_plane/mace0/airspeed_sweep_9000.csv"), index=False)
