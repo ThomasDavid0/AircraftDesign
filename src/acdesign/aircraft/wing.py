@@ -134,10 +134,15 @@ class Wing:
     def get_panel(
         self, y: npt.NDArray, otbd: bool = False, value: bool = False
     ) -> Iterable[tuple[int, float]] | tuple[int, float]:
-        if pd.api.types.is_list_like(y):
-            return self._get_panel(y, otbd, value)
+        was_array = pd.api.types.is_list_like(y)
+        y = np.atleast_1d(y)
+
+        res = self._get_panel(y, otbd, value)
+
+        if was_array:
+            return res
         else:
-            return self._get_panel(np.atleast_1d(y), otbd, value)[0]
+            return res[0]
 
     @overload
     def C(self, y: float, otbd: bool = False, value: bool = False) -> float: ...
