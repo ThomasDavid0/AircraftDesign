@@ -76,7 +76,7 @@ class SolarWing:
         return SolarWing(
             wing,
             WingAero(b, S, [section], [0, 1], wing.C),
-            len(SolarWing.place_panels(wing))
+            len(SolarWing.place_panels(wing, flap_w, aileron_w))
             * 2,  # for now assume 1 row in tip section
         )
 
@@ -131,22 +131,35 @@ class SolarWing:
         return ((wing.C(y * 2 / wing.b) - gap) // pw).astype(int)
 
     @staticmethod
-    def place_panels(wing: Wing):
+    def place_panels(wing: Wing, flap_w: float = 0, aileron_w: float = 0):
         y0 = 0.02
         panels = []
         fus_joint_added = False
-        while y0 + pw < wing.b / 2 and SolarWing.ncols(wing, y0 + pw):
+        
+        # Calculate the usable chord by subtracting control surface widths
+        def usable_chord(y):
+            c = wing.C(y)
+            # Interpolate control surface width based on spanwise location
+            # flap_w at root (y=0), aileron_w at tip (y=1)
+            control_w = flap_w * (1 - y) + aileron_w * y
+            return c - control_w
+        
+        # Modified ncols that accounts for control surfaces
+        def ncols_usable(y, gap=0.025):
+            return ((usable_chord(y * 2 / wing.b) - gap) // pw).astype(int)
+        
+        while y0 + pw < wing.b / 2 and ncols_usable(y0 + pw):
             if y0 > 0.55 and not fus_joint_added:
                 y0 += 0.03
                 fus_joint_added = True
-            for panel in range(SolarWing.ncols(wing, y0 + pw)):
-                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw
+            for panel in range(ncols_usable(y0 + pw)):
+                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw + flap_w
                 panels.append((x0, y0))
             y0 += pw
 
         return panels
 
-    def plot(self, fig=None, row=None, col=None):
+    def plot(self, fig=None, row=None, col=None, flap_w: float = 0, aileron_w: float = 0):
         fig = go.Figure() if fig is None else fig
         y = np.linspace(0, 1, 100)
         yb = y * self.wing.b / 2
@@ -174,7 +187,7 @@ class SolarWing:
             col=col,
         )
 
-        panels = SolarWing.place_panels(self.wing)
+        panels = SolarWing.place_panels(self.wing, flap_w, aileron_w)
         for x0, y0 in panels:
             fig.add_shape(
                 xref="x",
