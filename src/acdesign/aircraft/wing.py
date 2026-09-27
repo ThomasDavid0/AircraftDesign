@@ -92,6 +92,28 @@ class Wing:
             ],
         )
 
+    def _get_panel(
+        self, y: npt.NDArray, otbd: bool = False, value: bool = False
+    ) -> Iterable[tuple[int, float]] | tuple[int, float]:
+        """Get panel id and spanwise location within panel for given spanwise location on wing
+        if the spanwise location is at a panel intersection the panel closer to the root is returned
+            unless otbd is True.
+
+        """
+        _y = self.get_y(y, value)
+
+        panel_id = np.zeros_like(_y, dtype=int)
+
+        for y in self.ys:
+            panel_id[_y > y] = panel_id[_y > y] + 1
+
+        panel_y = np.zeros_like(_y, dtype=float)
+        for i, panel in enumerate(self.panels):
+            panel_y[panel_id == i] = panel.get_y(_y[panel_id == i], value)
+
+        return list(zip(panel_id, panel_y))
+
+    
     @overload
     def get_panel(
         self, y: float, otbd: bool = False, value: bool = False
@@ -100,24 +122,15 @@ class Wing:
     def get_panel(
         self, y: Iterable[float], otbd: bool = False, value: bool = False
     ) -> Iterable[tuple[int, float]]: ...
+
+
     def get_panel(
-        self, y: Iterable[float] | float, otbd: bool = False, value: bool = False
+        self, y: npt.NDArray, otbd: bool = False, value: bool = False
     ) -> Iterable[tuple[int, float]] | tuple[int, float]:
-        """Get panel id and spanwise location within panel for given spanwise location on wing
-        if the spanwise location is at a panel intersection the panel closer to the root is returned
-            unless otbd is True.
-
-        """
         if pd.api.types.is_list_like(y):
-            return y.__class__(self.get_panel(yi, otbd, value) for yi in y)
-
-        _y = self.get_y(y, value)
-
-        yarr = np.full(len(self.panels), _y)
-        panel_id = len(self) - ((yarr < self.ys) if otbd else (yarr <= self.ys)).sum()
-        y0s = np.array([0, *self.ys])
-        panel_y = (y - y0s[panel_id]) / self.ybs[panel_id]
-        return panel_id, np.clip(panel_y, 0, 1)
+            return self.get_panel(y, otbd, value)
+        else:
+            return self.get_panel(np.atleast_1d(y), otbd, value)[0]
 
     @overload
     def C(self, y: float, otbd: bool = False, value: bool = False) -> float: ...
