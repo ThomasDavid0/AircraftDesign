@@ -57,12 +57,12 @@ class SolarWing:
         )
 
     @staticmethod
-    def double_taper(nrows1, nrows2, ncols, section, flap_w: float = 0, aileron_w: float=0):
+    def double_taper(nrows1, nrows2, ncols, section, flap_w: float = 0, aileron_w: float=0, gap: float = 0.025):
         b1 = nrows1 * pw + 0.05
         b2 = nrows2 * pw + 0.05
         b = b1 + b2
-        CR = (ncols * pw + 0.03 if ncols > 1 else ncols * pw + 0.1) + flap_w
-        CT = pw + 0.05 + aileron_w
+        CR = ncols * pw + gap + flap_w
+        CT = pw + gap + aileron_w
 
         S = b1 * CR + b2 * (CR + CT) / 2
         wing = Wing(
@@ -76,7 +76,7 @@ class SolarWing:
         return SolarWing(
             wing,
             WingAero(b, S, [section], [0, 1], wing.C),
-            len(SolarWing.place_panels(wing, flap_w, aileron_w))
+            len(SolarWing.place_panels(wing, flap_w, aileron_w, gap))
             * 2,  # for now assume 1 row in tip section
         )
 
@@ -131,11 +131,10 @@ class SolarWing:
         return ((wing.C(y * 2 / wing.b) - gap) // pw).astype(int)
 
     @staticmethod
-    def place_panels(wing: Wing, flap_w: float = 0, aileron_w: float = 0):
+    def place_panels(wing: Wing, flap_w: float = 0, aileron_w: float = 0, gap: float = 0.025):
         y0 = 0.02
         panels = []
         fus_joint_added = False
-        gap = 0.025
         
         while y0 + pw < wing.b / 2:
             # Add fuselage joint gap if needed

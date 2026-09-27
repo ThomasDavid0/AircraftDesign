@@ -21,7 +21,7 @@ wing_airfoil = Airfoil.local("SG6041")
 tail_airfoil = Airfoil.local("SD8020")
 
 
-main_wing = SolarWing.double_taper(18, 12, 3, wing_airfoil, flap_w=0, aileron_w=0.07)
+main_wing = SolarWing.double_taper(18, 12, 3, wing_airfoil, flap_w=0.05, aileron_w=0.07)
 # 1.8, 0.5, 0.0
 tail = Wings(
     g.P0(),
