@@ -109,7 +109,11 @@ class Wing:
 
         panel_y = np.zeros_like(_y, dtype=float)
         for i, panel in enumerate(self.panels):
-            panel_y[panel_id == i] = panel.get_y(_y[panel_id == i], value)
+            mask = panel_id == i
+            # Convert wing-level y to panel-level y
+            y_start = self.ys[i - 1] if i > 0 else 0.0
+            y_end = self.ys[i]
+            panel_y[mask] = (_y[mask] - y_start) / (y_end - y_start)
 
         return list(zip(panel_id, panel_y))
 
