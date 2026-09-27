@@ -105,7 +105,10 @@ class Wing:
         panel_id = np.zeros_like(_y, dtype=int)
 
         for y in self.ys:
-            panel_id[_y > y] = panel_id[_y > y] + 1
+            if otbd:
+                panel_id[_y >= y] = panel_id[_y >= y] + 1
+            else:
+                panel_id[_y > y] = panel_id[_y > y] + 1
 
         panel_y = np.zeros_like(_y, dtype=float)
         for i, panel in enumerate(self.panels):
