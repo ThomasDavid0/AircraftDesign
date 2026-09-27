@@ -165,7 +165,7 @@ class SolarWing:
             control_w = flap_w if panel_id < len(wing.panels) - 1 else aileron_w
             
             for panel in range(ncols_usable(y0 + pw)):
-                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw + control_w
+                x0 = wing.le((y0) * 2 / wing.b) + 0.015 + panel * pw
                 panels.append((x0, y0))
             y0 += pw
 
