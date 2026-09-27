@@ -22,11 +22,11 @@ tail_airfoil = Airfoil.local("SD8020")
 
 
 main_wing = SolarWing.double_taper(
-    18, 
-    12, 
-    3, 
-    2, 
-    wing_airfoil, 
+    nrows1=18, 
+    nrows2=12, 
+    ncolsroot=3, 
+    ncolstip=2, 
+    airfoil=wing_airfoil, 
     flap_w=0.07, 
     aileron_w=0.07, 
     gap=0.01
