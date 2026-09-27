@@ -84,7 +84,7 @@ aircraft = Aircraft(
 
 
 if __name__ == "__main__":
-    main_wing.plot().show()
+    main_wing.plot(flap_w=0.05, aileron_w=0.05).show()
     #results_sl = aircraft.airspeed_sweep(Atmosphere.alt(0), 9, 24, 1.0, avl_workspace, "_sl")
     #results_sl.to_csv(Path("examples/solar_plane/mace0/airspeed_sweep_sl.csv"), index=False)
     #results_9000 = aircraft.airspeed_sweep(

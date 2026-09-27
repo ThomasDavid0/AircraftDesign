@@ -159,7 +159,8 @@ class SolarWing:
                 fus_joint_added = True
             
             # Determine control surface width for this row
-            y_norm = (y0 + pw / 2) * 2 / wing.b
+            # Use the end of the row to determine which panel we're in
+            y_norm = (y0 + pw) * 2 / wing.b
             panel_id, _ = wing.get_panel(y_norm)
             control_w = flap_w if panel_id < len(wing.panels) - 1 else aileron_w
             
