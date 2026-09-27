@@ -136,64 +136,75 @@ class Wing:
     ) -> tuple[int, float]: ...
     @overload
     def get_panel(
-        self, y: Iterable[float], otbd: bool = False, from_distance: bool = False
-    ) -> Iterable[tuple[int, float]]: ...
-
+        self, y: FloatArrayT, otbd: bool = False, from_distance: bool = False
+    ) -> list[tuple[int, float]]: ...
 
     def get_panel(
-        self, y: Iterable[float] | float, otbd: bool = False, from_distance: bool = False
-    ) -> Iterable[tuple[int, float]] | tuple[int, float]:
-        was_array = pd.api.types.is_list_like(y)
-        y = np.atleast_1d(y)
+        self, y: FloatArrayT | float, otbd: bool = False, from_distance: bool = False
+    ) -> list[tuple[int, float]] | tuple[int, float]:
+        is_scalar = np.ndim(y) == 0
+        y_array = np.atleast_1d(y)
 
-        res = self._get_panel(y, otbd, from_distance)
+        res = self._get_panel(y_array, otbd, from_distance)
 
-        if was_array:
-            return res
-        else:
-            return res[0]
+        return res[0] if is_scalar else res
 
     @overload
     def C(self, y: float, otbd: bool = False, from_distance: bool = False) -> float: ...
     @overload
-    def C(self, y: Iterable, otbd: bool = False, from_distance: bool = False) -> Iterable: ...
+    def C(self, y: FloatArrayT, otbd: bool = False, from_distance: bool = False) -> FloatArrayT: ...
     def C(
-        self, y: Iterable | float, otbd: bool = False, from_distance: bool = False
-    ) -> Iterable | float:
-        if pd.api.types.is_list_like(y):
-            return y.__class__(self.C(yi, otbd, from_distance) for yi in y)
-
-        panel_id, panel_y = self.get_panel(y, otbd, from_distance)
-
-        return self.panels[panel_id].C(panel_y)
+        self, y: FloatArrayT | float, otbd: bool = False, from_distance: bool = False
+    ) -> FloatArrayT | float:
+        is_scalar = np.ndim(y) == 0
+        y_array = np.atleast_1d(y)
+        
+        panel_data = self._get_panel(y_array, otbd, from_distance)
+        
+        result = np.array([
+            self.panels[panel_id].C(panel_y) 
+            for panel_id, panel_y in panel_data
+        ])
+        
+        return result[0] if is_scalar else result
 
     @overload
     def le(self, y: float, otbd: bool = False, from_distance: bool = False) -> float: ...
     @overload
-    def le(self, y: Iterable, otbd: bool = False, from_distance: bool = False) -> Iterable: ...
+    def le(self, y: FloatArrayT, otbd: bool = False, from_distance: bool = False) -> FloatArrayT: ...
     def le(
-        self, y: Iterable | float, otbd: bool = False, from_distance: bool = False
-    ) -> Iterable | float:
-        if pd.api.types.is_list_like(y):
-            return y.__class__(self.C(yi, otbd, from_distance) for yi in y)
-        panel_id, panel_y = self.get_panel(y, otbd, from_distance)
-        return (
-            self.panels[panel_id].le(panel_y) + self.Xs[panel_id - 1]
-            if panel_id > 0
-            else 0
-        )
+        self, y: FloatArrayT | float, otbd: bool = False, from_distance: bool = False
+    ) -> FloatArrayT | float:
+        is_scalar = np.ndim(y) == 0
+        y_array = np.atleast_1d(y)
+        
+        panel_data = self._get_panel(y_array, otbd, from_distance)
+        
+        result = np.array([
+            self.panels[panel_id].le(panel_y) + (self.Xs[panel_id - 1] if panel_id > 0 else 0)
+            for panel_id, panel_y in panel_data
+        ])
+        
+        return result[0] if is_scalar else result
 
+    @overload
+    def y(self, y: float, otbd: bool = False, from_distance: bool = False) -> float: ...
+    @overload
+    def y(self, y: FloatArrayT, otbd: bool = False, from_distance: bool = False) -> FloatArrayT: ...
     def y(
-        self, y: Iterable | float, otbd: bool = False, from_distance: bool = False
-    ) -> Iterable | float:
-        if pd.api.types.is_list_like(y):
-            return y.__class__(self.C(yi, otbd, from_distance) for yi in y)
-        panel_id, panel_y = self.get_panel(y, otbd, from_distance)
-        return (
-            self.panels[panel_id].y(panel_y) + self.Ys[panel_id - 1]
-            if panel_id > 0
-            else 0
-        )
+        self, y: FloatArrayT | float, otbd: bool = False, from_distance: bool = False
+    ) -> FloatArrayT | float:
+        is_scalar = np.ndim(y) == 0
+        y_array = np.atleast_1d(y)
+        
+        panel_data = self._get_panel(y_array, otbd, from_distance)
+        
+        result = np.array([
+            self.panels[panel_id].y(panel_y) + (self.Ys[panel_id - 1] if panel_id > 0 else 0)
+            for panel_id, panel_y in panel_data
+        ])
+        
+        return result[0] if is_scalar else result
 
     def plot(
         self,
