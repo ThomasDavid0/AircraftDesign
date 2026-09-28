@@ -20,6 +20,9 @@ class Wings:
         self.b = max(w.b for w in self.wings)
         self.C = max(w.smc for w in self.wings)
 
+    def __getitem__(self, i):
+        return self.wings[i]
+
     def avl_component(self, component_id: int, atm: Atmosphere, u: float):
         return list(chain(*[w.dump_avl(component_id, self.offset, atm, u) for w in self.wings]))
 

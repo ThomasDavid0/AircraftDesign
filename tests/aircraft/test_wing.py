@@ -1,12 +1,13 @@
-from pytest import approx, fixture, mark
-import numpy as np
 import geometry as g
-from acdesign.aircraft.wing_panel import WingPanel, ControlSurface
+import numpy as np
+from pytest import approx, fixture, mark
+
 from acdesign.aircraft.wing import Wing
+from acdesign.aircraft.wing_panel import ControlSurface, WingPanel
 from acdesign.aircraft.wings import Wings
 from acdesign.airfoils.airfoil import Airfoil, InterpolatedAirfoil
 from tests.performance.conftest import wing
-``
+
 
 def test_create_trapezoidal_panel_geometry():
     wingpanel = WingPanel.trapz_crct(1.0, 0.3, 0.3, 0.25)
@@ -91,7 +92,7 @@ def dtwing():
     )
 
 
-def test_retrieves_the_correct_panel_and_spanwise_location(dtwing: Wing):
+def test_get_panel_retrieves_the_correct_panel_and_spanwise_location(dtwing: Wing):
     id, yloc = dtwing.get_panel(0.25)
     assert id == 0
     assert yloc == 0.5
@@ -110,8 +111,8 @@ def test_retrieves_the_correct_panel_and_spanwise_location(dtwing: Wing):
 
 def test_gets_chord_at_spanwise_location(dtwing: Wing):
     assert dtwing.C(0) == 0.3
-    assert dtwing.C([0, 0.5, 1.0]) == [0.3, 0.3, 0.2]
-    assert dtwing.C([0, 0.5, 1.0]) == [0.3, 0.3, 0.2]
+    np.testing.assert_array_equal(dtwing.C([0, 0.5, 1.0]), [0.3, 0.3, 0.2])
+    np.testing.assert_array_equal(dtwing.C([0, 0.5, 1.0]), [0.3, 0.3, 0.2])
 
 
 @fixture

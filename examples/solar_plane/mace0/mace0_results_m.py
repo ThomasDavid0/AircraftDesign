@@ -73,15 +73,15 @@ def _(go, results_9000, results_sl):
     # Calculate airspeed for Cl = 0.6 at both altitudes
     # L = 0.5 * rho * V^2 * S * Cl, where L = m * g
     # V = sqrt(2 * m * g / (rho * S * Cl))
-    target_cl = 0.6
+    target_cl = 0.7
     g = 9.81
-    
+
     atm_sl = Atmosphere.alt(0)
     atm_9000 = Atmosphere.alt(9000)
-    
+
     # V = sqrt(2 * L / (rho * S * Cl)) = sqrt(2 * m * g / (rho * S * Cl))
-    u_sl_cl06 = (2 * aircraft.mass.m * g / (atm_sl.rho * aircraft.S * target_cl)) ** 0.5
-    u_9000_cl06 = (2 * aircraft.mass.m * g / (atm_9000.rho * aircraft.S * target_cl)) ** 0.5
+    u_sl_cl06 = (2 * aircraft.mass.m[0] * g / (atm_sl.rho * aircraft.S * target_cl)) ** 0.5
+    u_9000_cl06 = (2 * aircraft.mass.m[0] * g / (atm_9000.rho * aircraft.S * target_cl)) ** 0.5
 
     fig_power = go.Figure()
     fig_power.add_trace(
@@ -110,24 +110,35 @@ def _(go, results_9000, results_sl):
         x=u_sl_cl06,
         line_dash="dash",
         line_color="blue",
-        annotation_text=f"Cl=0.6 @ SL ({u_sl_cl06:.1f} m/s)",
-        annotation_position="top",
+        annotation=dict(
+            text=f"SL Cl={target_cl:.2f} ({u_sl_cl06:.1f} m/s)",
+            textangle=90
+        )
+    
     )
     fig_power.add_vline(
         x=u_9000_cl06,
         line_dash="dash",
         line_color="orange",
-        annotation_text=f"Cl=0.6 @ 9000m ({u_9000_cl06:.1f} m/s)",
-        annotation_position="top",
+        annotation=dict(
+            text=f"9000m Cl={target_cl:.2f} ({u_9000_cl06:.1f} m/s)",
+            textangle=90
+        )
     )
     fig_power.update_layout(
         template="plotly_white",
         title="MACE0 Power vs Airspeed",
-        xaxis_title="Airspeed (m/s)",
-        yaxis_title="Power (W)",
+        xaxis=dict(
+            range=[8, 25],
+            title="Airspeed (m/s)",
+        ),
+        yaxis=dict(
+            range=[0, 250],
+            title="Power (W)",
+        ),
     )
     fig_power
-    return Airfoil, Atmosphere, SolarWing, aircraft, atm_9000, atm_sl, fig_power, g, main_wing, sys, target_cl, u_9000_cl06, u_sl_cl06
+    return
 
 
 if __name__ == "__main__":

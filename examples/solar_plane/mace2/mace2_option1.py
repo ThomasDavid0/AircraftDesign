@@ -3,8 +3,7 @@ from pathlib import Path
 
 import geometry as g
 import numpy as np
-from scipy.interpolate import make_interp_spline
-from scipy.optimize import root_scalar
+import pandas as pd
 
 from acdesign.aircraft import Wings
 from acdesign.aircraft.aircraft import Aircraft
@@ -22,11 +21,6 @@ avl_workspace.mkdir(parents=True, exist_ok=True)
 wing_airfoil = Airfoil.local("SG6041")
 tail_airfoil = Airfoil.local("SD8020")
 
-flap_w = 0.1
-aileron_w = 0.1
-gap = 0.01
-elevator_w = 0.08
-
 main_wing = SolarWing.double_taper(
     name="main_wing",
     nrows1=16,
@@ -34,15 +28,15 @@ main_wing = SolarWing.double_taper(
     ncolsroot=3,
     ncolstip=2,
     airfoil=wing_airfoil,
-    flap_w=flap_w,
-    aileron_w=aileron_w,
-    gap=gap,
+    flap_w=0.1,
+    aileron_w=0.1,
+    gap=0.02,
 )
 
 
 hstab = SolarWing.straight(
-    name="hstab", nrows=8, ncols=1, airfoil=tail_airfoil, control_w=elevator_w, gap=gap
-)  # 1.8, 0.5, 0.0
+    name="hstab", nrows=8, ncols=1, airfoil=tail_airfoil, control_w=0.08, gap=0.02
+)
 
 fin = Wing(
     "fin",
@@ -88,7 +82,9 @@ aircraft = Aircraft(
     ref_wing=0,
     reference_point=g.PX(0.5),
     mass=g.Mass.point(8.0),
-    cd0_offset=0.007 + (0.006 * 0.06 * 2 + 0.002 * 0.0005) / main_wing.wing.S,
+    #          misc     sensors    antenna            # horns etc
+    cd0_offset=0.007
+    + (0.1 * 0.05 + 0.006 * 0.06 * 2 + 0.002 * 0.0005) / main_wing.wing.S,
     propulsion=PropulsionSystem(
         propeller=EmpiricalPropeller(
             16 * 25.4 / 1000, 10 * 25.4 / 1000, 0.6
@@ -97,55 +93,26 @@ aircraft = Aircraft(
         n=1,
     ),
 )
+npanels = main_wing.npanels + hstab.npanels
+results_file = Path("examples/solar_plane/mace2", "mace2_option1.csv")
+if not results_file.exists():
+    results = aircraft.airspeed_sweep(
+        Atmosphere.alt(6000), 9, 30, 1, 1.0, avl_workspace, "_6000m"
+    )
+    results.to_csv(results_file, index=False)
+else:
+    results = pd.read_csv(results_file)
 
+cells=6
+capacity=17.4
 
 if __name__ == "__main__":
-    run = True
+    from acdesign.solar_wing import assess_solar_performance
 
-    npanels = main_wing.npanels + hstab.npanels
-    print(
-        f"Total number of panels: {npanels} (wing: {main_wing.npanels}, hstab: {hstab.npanels})"
+    aircraft.plot().show()
+    main_wing.plot().show()
+
+    # Battery: 6S 2900 mAh LiPo, 6 in parallel: 17400 mAh, 2196g
+    assess_solar_performance(
+        results, aircraft, npanels, cell_power=2.5, battery_capacity=capacity, battery_cells=cells
     )
-    aircraft.plot().update_layout(
-        template="plotly_white", margin=dict(l=0, r=0, t=0, b=0), width=800, height=400
-    ).show()
-    main_wing.plot(
-        flap_w=flap_w,
-        aileron_w=aileron_w,
-        gap=gap,
-    ).update_layout(
-        template="plotly_white", margin=dict(l=0, r=0, t=0, b=0), width=800, height=300
-    ).show()
-
-    max_cl = 0.7
-    u_4000_cl06 = (
-        2 * aircraft.mass.m[0] * 9.81 / (Atmosphere.alt(4000).rho * aircraft.S * max_cl)
-    ) ** 0.5
-
-    if run:
-        results = aircraft.airspeed_sweep(
-            Atmosphere.alt(6000), 9, 30, 2, 1.0, avl_workspace, "_6000m"
-        )
-        results.to_csv(
-            Path("examples/solar_plane/mace2/airspeed_sweep_6000_flapped.csv"),
-            index=False,
-        )
-        spline = make_interp_spline(results.u, results.power)
-
-        def objective(u):
-            return npanels * main_wing.cell_power - spline(u)
-
-        bracket = [12, 30]
-        result = root_scalar(objective, bracket=bracket, method="brentq")
-        if result.converged:
-            print(f"Max solar airspeed at 6000 m: {result.root:.2f} m/s")
-
-        # info on 2000m climb
-        climb_energy = (
-            results.power.min() - npanels * main_wing.cell_power
-        ) * 60 * 15 + 9.81 * aircraft.mass.m[0] * 2000
-        climb_capacity = climb_energy / (6 * 4.1 * 3600)  # J / (V * 3600) = Ah; 6S pack: 6 cells × 4.1V = 24.6V
-        print(f"Climb Energy (15 minutes): {climb_energy:.0f} J")
-        print(f"Climb Capacity (15 minutes): {climb_capacity:.2f} Ah")
-
-    print(f"Landing airspeed & 4000m: {u_4000_cl06:.2f} m/s")

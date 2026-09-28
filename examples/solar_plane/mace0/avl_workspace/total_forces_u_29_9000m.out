@@ -13,21 +13,21 @@
 
  Run case: u_29_9000m                              
 
-  Alpha =  -1.71354     pb/2V =  -0.00000     p'b/2V =  -0.00000
-  Beta  =   0.00000     qc/2V =  -0.00000
+  Alpha =  -0.34601     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Beta  =   0.00000     qc/2V =   0.00000
   Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
 
-  CXtot =  -0.00055     Cltot =   0.00001     Cl'tot =   0.00001
-  CYtot =   0.00000     Cmtot =   0.00000
-  CZtot =  -0.01782     Cntot =  -0.00000     Cn'tot =  -0.00000
+  CXtot =  -0.00158     Cltot =   0.00000     Cl'tot =   0.00000
+  CYtot =   0.00001     Cmtot =  -0.00000
+  CZtot =  -0.17486     Cntot =  -0.00000     Cn'tot =  -0.00000
 
-  CLtot =   0.01782
-  CDtot =   0.00002
-  CDvis =   0.00000     CDind = 0.0000216
-  CLff  =   0.01782     CDff  = 0.0000118    | Trefftz
-  CYff  =   0.00000         e =    0.4488    | Plane  
+  CLtot =   0.17486
+  CDtot =   0.00053
+  CDvis =   0.00000     CDind = 0.0005286
+  CLff  =   0.17486     CDff  = 0.0004019    | Trefftz
+  CYff  =   0.00001         e =    1.2679    | Plane  
 
-   elevator        =   2.76760
-   rudder          =  -0.03342
+   elevator        =   1.97959
+   rudder          =  -0.17486
 
  ---------------------------------------------------------------

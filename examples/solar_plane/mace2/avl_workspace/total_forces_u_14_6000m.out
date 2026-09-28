@@ -1,0 +1,33 @@
+ ---------------------------------------------------------------
+ Vortex Lattice Output -- Total Forces
+
+ Configuration: MACE2                                                       
+     # Surfaces =   8
+     # Strips   = 160
+     # Vortices =1920
+
+  Sref =  2.7910       Cref = 0.47500       Bref =  5.8800    
+  Xref = 0.50000       Yref =  0.0000       Zref =  0.0000    
+
+ Standard axis orientation,  X fwd, Z down         
+
+ Run case: u_14_6000m                              
+
+  Alpha =   3.95799     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Beta  =   0.00000     qc/2V =  -0.00000
+  Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
+
+  CXtot =   0.03187     Cltot =  -0.00000     Cl'tot =  -0.00000
+  CYtot =   0.00002     Cmtot =   0.00000
+  CZtot =  -0.59694     Cntot =  -0.00000     Cn'tot =   0.00000
+
+  CLtot =   0.59772
+  CDtot =   0.00941
+  CDvis =   0.00000     CDind = 0.0094058
+  CLff  =   0.59839     CDff  = 0.0094103    | Trefftz
+  CYff  =   0.00002         e =    0.9777    | Plane  
+
+   elevator        =  -4.07343
+   rudder          =  -0.09262
+
+ ---------------------------------------------------------------

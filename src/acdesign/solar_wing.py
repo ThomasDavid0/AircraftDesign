@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 import geometry as g
@@ -6,8 +6,10 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import plotly.graph_objects as go
-from scipy.interpolate import RegularGridInterpolator, interp1d
+from scipy.interpolate import RegularGridInterpolator, interp1d, make_interp_spline
+from scipy.optimize import root_scalar
 
+from acdesign.aircraft import Aircraft
 from acdesign.aircraft.wing import Wing
 from acdesign.aircraft.wing_panel import WingPanel
 from acdesign.airfoils import Airfoil
@@ -31,6 +33,9 @@ class SolarWing:
     wing: Wing
     npanels: int
     cell_power = 2.5
+    flap_w: float = 0.0
+    aileron_w: float = 0.0
+    gap: float = 0.02
 
     def data(self):
         return {
@@ -53,10 +58,13 @@ class SolarWing:
     ):
         b = nrows * pw + gap * 4
         C = gap + ncols * pw + max(control_w, gap)
-        wing = Wing(name or "solar wing", g.P0(), [WingPanel.trapezoidal(b, b * C, 1)])
+        wing = Wing(name or "solar wing", g.P0(), [WingPanel.trapezoidal(b, b * C, 1, airfoils={0: airfoil})])
         return SolarWing(
             wing,
             len(SolarWing.place_panels(wing, flap_w=control_w, aileron_w=control_w, gap=gap)) * 2,
+            flap_w=control_w,
+            aileron_w=control_w,
+            gap=gap
         )
 
     @staticmethod
@@ -88,6 +96,9 @@ class SolarWing:
         return SolarWing(
             wing,
             len(SolarWing.place_panels(wing, flap_w, aileron_w, gap)) * 2,
+            flap_w=flap_w,
+            aileron_w=aileron_w,
+            gap=gap,
         )
 
     @staticmethod
@@ -130,6 +141,9 @@ class SolarWing:
         return SolarWing(
             wing,
             len(SolarWing.place_panels(wing)) * 2,
+            flap_w=0,
+            aileron_w=0,
+            gap=0.03,
         )
 
     @staticmethod
@@ -183,9 +197,6 @@ class SolarWing:
         fig=None,
         row=None,
         col=None,
-        flap_w: float = 0,
-        aileron_w: float = 0,
-        gap: float = 0.03,
     ):
         fig = go.Figure() if fig is None else fig
         y = np.linspace(0, 1, 100)
@@ -243,7 +254,7 @@ class SolarWing:
             col=col,
         )
 
-        panels = SolarWing.place_panels(self.wing, flap_w, aileron_w, gap)
+        panels = SolarWing.place_panels(self.wing, self.flap_w, self.aileron_w, self.gap)
         
         # Plot solar panels on right side
         for x0, y0 in panels:
@@ -474,3 +485,69 @@ class SolarWingResults:
             include_groups=False,
         )
         return results.rename("mass").reset_index().assign(power=power).astype(float)
+
+
+
+
+def assess_solar_performance(
+    results: pd.DataFrame | None,
+    aircraft: Aircraft,
+    npanels: int,
+    cell_power: float = 2.5,
+    battery_capacity: float = 17.4,
+    battery_cells: int = 6,
+):
+    
+    print(
+        f"mass={aircraft.mass.m[0]:.1f} kg, b={aircraft.wing.b:.2f} m, S={aircraft.wing.S:.2f} m^2, SMC={aircraft.wing[0].smc:.2f} m^2, Cr={aircraft.wing[0].C(0):.2f} m, Ct={aircraft.wing[0].C(1):.2f} m, AR={aircraft.wing[0].AR:.2f}"
+    )
+    
+    print(f"Solar panels: {npanels}")
+    max_cl = 0.7
+    u_4000_cl06 = (
+        2 * aircraft.mass.m[0] * 9.81 / (Atmosphere.alt(4000).rho * aircraft.S * max_cl)
+    ) ** 0.5
+    print(f"Landing airspeed & 4000m: {u_4000_cl06:.2f} m/s")
+
+    if results is None:
+        print("No results provided, skipping solar performance assessment.")
+        return
+
+    spline = make_interp_spline(results.u, results.power)
+    
+    def objective(u):
+        return npanels * cell_power - spline(u)
+
+
+    bracket = [12, 30]
+    result = root_scalar(objective, bracket=bracket, method="brentq")
+    if result.converged:
+        print(f"Max solar airspeed at 6000 m: {result.root:.2f} m/s")
+
+    # info on 2000m climb
+    climb_energy = (results.power.min()) * 60 * 15 + 9.81 * aircraft.mass.m[0] * 2000
+    climb_capacity = climb_energy / (
+        battery_cells * 4.0 * 3600
+    )  
+    print("15 minutes at min power speed + 2000m climb, no sun:")
+    print(f"Capacity: {climb_capacity:.2f} Ah")
+
+    cruise_capacity = battery_capacity * 0.7 - climb_capacity
+    print(f"Cruise capacity remaining (to 30%): {cruise_capacity:.2f} Ah")
+
+    d_20ms = cruise_capacity * 4.0 * battery_cells * 60 / spline(20)
+    print(f"6000m, 20 m/s no sun duration: {d_20ms:.0f} m")
+
+    d_30ms = cruise_capacity * 4.0 * battery_cells * 60 / spline(30)
+    print(f"6000m, 30 m/s no sun duration: {d_30ms:.0f} m")
+
+    d_30ms_sun = (
+        cruise_capacity * 4.0 * battery_cells * 60 + npanels * cell_power * 60
+    ) / spline(30)
+    print(f"6000m, 30 m/s with sun duration: {d_30ms_sun:.0f} m")
+
+    max_cl = 0.7
+    u_4000_cl06 = (
+        2 * aircraft.mass.m[0] * 9.81 / (Atmosphere.alt(4000).rho * aircraft.S * max_cl)
+    ) ** 0.5
+    print(f"Landing airspeed & 4000m: {u_4000_cl06:.2f} m/s")

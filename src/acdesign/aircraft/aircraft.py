@@ -30,6 +30,10 @@ class Aircraft:
     propulsion: PropulsionSystem
     cd0_offset: float = 0.0
 
+    @property
+    def wing(self):
+        return self.components[self.ref_wing]
+
     def __post_init__(self):
         self.S = self.components[self.ref_wing].S
         self.b = self.components[self.ref_wing].b
@@ -89,7 +93,7 @@ class Aircraft:
         """
         case_name = case_name or f"u_{int(u):02d}"
 
-        cl = self.mass.m[0] * load_factor / (0.5 * atm.rho * u**2 * self.S)
+        cl = self.mass.m[0] * 9.81 * load_factor / (0.5 * atm.rho * u**2 * self.S)
         logger.info(f"Creating case u={u:.2f} m/s, cl={cl:.2f}")
 
         Path(avl_workspace, "geom.avl").write_text("\n".join(self.dump_avl(atm, u)))
@@ -181,13 +185,14 @@ class Aircraft:
         atm: Atmosphere,
         u_min: int,
         u_max: int,
+        u_step: int = 1,
         load_factor: float = 1.0,
         avl_workspace: str | None = None,
         case_name_suffix: str = "",
     ):
         u_min = int(u_min)
         u_max = int(u_max)
-        u_range = np.linspace(u_min, u_max, u_max - u_min + 1)
+        u_range = np.linspace(u_min, u_max, int((u_max - u_min + 1) // u_step))
         results = []
         for u in u_range:
             results.append(
