@@ -35,36 +35,72 @@ def _():
 
 
 @app.cell
-def _(option1, option2):
-    from plotly.subplots import make_subplots
+def _(go, option1, option2):
     import numpy as np
 
-    fig = make_subplots(
-        rows=1, cols=2,
-        subplot_titles=("Option 1", "Option 2"),
-        horizontal_spacing=0.1,
-        specs=[[{"type": "scatter3d"}, {"type": "scatter3d"}]]
-    )
+    # Create a single 3D plot
+    fig = go.Figure()
 
-    fig.add_traces(option1.plot().data, rows=1, cols=1)
-    fig.add_traces(option2.plot().data, rows=1, cols=2)
+    # Add option1 traces (no offset)
+    for trace in option1.plot().data:
+        trace.name = f"Option 1 - {trace.name}" if trace.name else "Option 1"
+        trace.showlegend = False
+        fig.add_trace(trace)
 
+    # Add option2 traces (offset by 2m in Z)
+    for trace in option2.plot().data:
+        trace_copy = go.Scatter3d(
+            x=trace.x,
+            y=trace.y,
+            z=trace.z + 2.0 if trace.z is not None else None,
+            mode=trace.mode,
+            line=trace.line,
+            name=f"Option 2 - {trace.name}" if trace.name else "Option 2",
+            showlegend=False,
+        )
+        fig.add_trace(trace_copy)
 
-    # Update both subplots with identical ranges and equal aspect ratio
-    fig.update_layout(
-        scene=dict(
-            xaxis=dict(range=[-3, 3]),
-            yaxis=dict(range=[-3,3]),
-            zaxis=dict(range=[-3,3]),
-            #aspectmode='box'
-        ),
-        scene2=dict(
-            xaxis=dict(range=[-3, 3]),
-            yaxis=dict(range=[-3,3]),
-            zaxis=dict(range=[-3,3]),
-            #aspectmode='box'
+    # Add text annotations for each aircraft
+    fig.add_trace(
+        go.Scatter3d(
+            x=[0],
+            y=[0],
+            z=[0],
+            mode="text",
+            text=["Option 1"],
+            textposition="top center",
+            textfont=dict(size=14, color="blue"),
+            showlegend=False,
         )
     )
+    
+    fig.add_trace(
+        go.Scatter3d(
+            x=[0],
+            y=[0],
+            z=[2.0],
+            mode="text",
+            text=["Option 2"],
+            textposition="top center",
+            textfont=dict(size=14, color="red"),
+            showlegend=False,
+        )
+    )
+
+    # Update layout with appropriate ranges
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(range=[-0.5, 2.5], title="X (m)"),
+            yaxis=dict(range=[-3, 3], title="Y (m)"),
+            zaxis=dict(range=[-1, 3], title="Z (m)"),
+            aspectmode='data'
+        ),
+        title="Aircraft Comparison: Option 1 vs Option 2",
+        width=1000,
+        height=800,
+    )
+    
+    fig.show()
 
     return
 
