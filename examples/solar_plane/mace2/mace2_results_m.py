@@ -49,10 +49,11 @@ def _(go, option1, option2):
 
     # Add option2 traces (offset by 2m in Z)
     for trace in option2.plot().data:
+        z_offset = np.array(trace.z) + 2.0 if trace.z is not None else None
         trace_copy = go.Scatter3d(
             x=trace.x,
             y=trace.y,
-            z=trace.z + 2.0 if trace.z is not None else None,
+            z=z_offset,
             mode=trace.mode,
             line=trace.line,
             name=f"Option 2 - {trace.name}" if trace.name else "Option 2",
