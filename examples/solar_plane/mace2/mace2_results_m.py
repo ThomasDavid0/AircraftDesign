@@ -38,7 +38,7 @@ def _():
 def _(option1, option2):
     from plotly.subplots import make_subplots
     import numpy as np
-    
+
     fig = make_subplots(
         rows=1, cols=2,
         subplot_titles=("Option 1", "Option 2"),
@@ -48,40 +48,24 @@ def _(option1, option2):
 
     fig.add_traces(option1.plot().data, rows=1, cols=1)
     fig.add_traces(option2.plot().data, rows=1, cols=2)
-    
-    # Calculate combined ranges for all axes
-    all_x = []
-    all_y = []
-    all_z = []
-    
-    for trace in fig.data:
-        if hasattr(trace, 'x') and trace.x is not None:
-            all_x.extend([v for v in trace.x if v is not None])
-        if hasattr(trace, 'y') and trace.y is not None:
-            all_y.extend([v for v in trace.y if v is not None])
-        if hasattr(trace, 'z') and trace.z is not None:
-            all_z.extend([v for v in trace.z if v is not None])
-    
-    x_range = [min(all_x), max(all_x)] if all_x else [0, 1]
-    y_range = [min(all_y), max(all_y)] if all_y else [0, 1]
-    z_range = [min(all_z), max(all_z)] if all_z else [0, 1]
-    
+
+
     # Update both subplots with identical ranges and equal aspect ratio
     fig.update_layout(
         scene=dict(
-            xaxis=dict(range=x_range),
-            yaxis=dict(range=y_range),
-            zaxis=dict(range=z_range),
-            aspectmode='data'
+            xaxis=dict(range=[-3, 3]),
+            yaxis=dict(range=[-3,3]),
+            zaxis=dict(range=[-3,3]),
+            #aspectmode='box'
         ),
         scene2=dict(
-            xaxis=dict(range=x_range),
-            yaxis=dict(range=y_range),
-            zaxis=dict(range=z_range),
-            aspectmode='data'
+            xaxis=dict(range=[-3, 3]),
+            yaxis=dict(range=[-3,3]),
+            zaxis=dict(range=[-3,3]),
+            #aspectmode='box'
         )
     )
-    
+
     return
 
 
